@@ -1,0 +1,47 @@
+{
+    // Verwendet IntelliSense zum Ermitteln möglicher Attribute.
+    // Zeigen Sie auf vorhandene Attribute, um die zugehörigen Beschreibungen anzuzeigen.
+    // Weitere Informationen finden Sie unter https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Pipeline",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env" : {
+                // "REPO_DIR": "C:/Users/SvenG/Documents/Git_Repos/Tabular-Data-Synthesis-Repos/tab-ddpm",
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args":[
+                "--config",
+                "C:\\Users\\SvenG\\Documents\\Git_Repos\\Tabular-Data-Synthesis-Repos\\tab-ddpm\\exp\\adult\\config.toml",
+                "--train",
+                "--sample",
+                "--eval"
+            ]
+        },
+        {
+            "name": "Tune",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env" : {
+                // "REPO_DIR": "C:/Users/SvenG/Documents/Git_Repos/Tabular-Data-Synthesis-Repos/tab-ddpm",
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args":[
+                "adult",
+                "10",
+                "synthetic",
+                "mlp",
+                "dppm_test_1",
+                "--eval_seeds"
+            ]
+        }
+    ]
+}
