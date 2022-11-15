@@ -20,3 +20,5 @@ data/
 junk/
 RF/
 exps/
+*.yml
+*.amltmp

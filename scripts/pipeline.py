@@ -34,6 +34,21 @@ def main():
     parser.add_argument('--change_val', action='store_true',  default=False)
 
     args = parser.parse_args()
+
+    print("Current wd:", os.getcwd())
+    print("Files inside wd: ", os.listdir(os.getcwd()))
+    import sys
+    print("Sys Paths: \n") 
+    print('\n'.join(sys.path),"\n")
+    paths=sorted(os.environ)
+    print("Found paths: ", sorted(os.environ))
+    for i in paths:
+        if "PATH" in i:
+            print(f"Printing {i}: ")
+            user_paths = os.environ[i].split(os.pathsep)
+            print(user_paths, "\n")
+
+
     raw_config = lib.load_config(args.config)
     if 'device' in raw_config:
         device = torch.device(raw_config['device'])
