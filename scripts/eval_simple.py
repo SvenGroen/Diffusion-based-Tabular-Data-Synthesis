@@ -43,6 +43,20 @@ def train_simple(
             X_num_real, X_cat_real, y_real = read_pure_data(real_data_path)
         X_num_fake, X_cat_fake, y_fake = read_pure_data(synthetic_data_path)
 
+        import pandas as pd
+        if not os.path.isdir('outputs'):
+            os.mkdir('outputs')
+        print("Shapes: ")
+        print(X_num_fake.shape,X_cat_fake.shape,y_fake.shape)
+        total_syn = np.concatenate([X_num_fake, X_cat_fake, np.expand_dims(y_fake,axis=-1)], axis=-1)
+        df = pd.DataFrame(total_syn, columns =["0","1","2","3","4","5","6","7","8","9","10","11","12","13","y"])
+        df.to_csv('outputs/output_syn.csv', index=False)
+
+        total_real = np.concatenate([X_num_real, X_cat_real,np.expand_dims(y_real,axis=-1) ], axis=-1)
+        df = pd.DataFrame(total_real, columns =["0","1","2","3","4","5","6","7","8","9","10","11","12","13","y"])
+        df.to_csv('outputs/output_real.csv', index=False)
+
+        print("SAVED DATAFRAMES")
         ###
         # dists = privacy_metrics(real_data_path, synthetic_data_path)
         # bad_fakes = dists.argsort()[:int(0.25 * len(y_fake))]
@@ -72,6 +86,7 @@ def train_simple(
     else:
         raise "Choose eval method"
 
+    
     if not change_val:
         X_num_val, X_cat_val, y_val = read_pure_data(real_data_path, 'val')
     X_num_test, X_cat_test, y_test = read_pure_data(real_data_path, 'test')

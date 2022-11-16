@@ -42,8 +42,8 @@ batch_size = 10000
 seed = 0
 
 [eval.type]
-eval_model = "catboost"
-eval_type = "synthetic"
+eval_model = "simple"
+eval_type = "merged"
 
 [eval.T]
 seed = 0

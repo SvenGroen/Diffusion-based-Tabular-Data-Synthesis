@@ -22,3 +22,4 @@ RF/
 exps/
 *.yml
 *.amltmp
+*.amlignore

@@ -7,6 +7,7 @@ from tab_ddpm import GaussianMultinomialDiffusion
 from utils_train import get_model, make_dataset, update_ema
 import lib
 import pandas as pd
+from azureml.core import Run
 
 class Trainer:
     def __init__(self, diffusion, train_iter, lr, weight_decay, steps, device=torch.device('cuda:1')):
@@ -44,6 +45,7 @@ class Trainer:
         return loss_multi, loss_gauss
 
     def run_loop(self):
+        run = Run.get_context()
         step = 0
         curr_loss_multi = 0.0
         curr_loss_gauss = 0.0
@@ -60,6 +62,8 @@ class Trainer:
             curr_loss_multi += batch_loss_multi.item() * len(x)
             curr_loss_gauss += batch_loss_gauss.item() * len(x)
 
+            run.log("mloss", np.around(curr_loss_multi / curr_count, 4))
+            run.log("gloss", np.around(curr_loss_gauss / curr_count, 4))
             if (step + 1) % self.log_every == 0:
                 mloss = np.around(curr_loss_multi / curr_count, 4)
                 gloss = np.around(curr_loss_gauss / curr_count, 4)
