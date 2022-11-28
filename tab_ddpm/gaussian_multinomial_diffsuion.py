@@ -777,7 +777,7 @@ class GaussianMultinomialDiffusion(torch.nn.Module):
         b = x.shape[0]
         device = x.device
         for t in reversed(range(T)):
-            print(f'Sample timestep {t:4d}', end='\r')
+            # print(f'Sample timestep {t:4d}', end='\r') # EDIT
             t_array = (torch.ones(b, device=device) * t).long()
             out_num = self._denoise_fn(x, t_array, **out_dict)
             x = self.gaussian_ddim_step(

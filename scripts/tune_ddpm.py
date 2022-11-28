@@ -28,6 +28,9 @@ parent_path = Path(f'exp/{ds_name}/')
 exps_path = Path(f'exp/{ds_name}/many-exps/') # temporary dir. maybe will be replaced with tempdiвdr
 eval_seeds = f'scripts/eval_seeds.py'
 
+my_env = os.environ.copy()
+my_env["PYTHONPATH"] = os.getcwd() # Needed to run the subscripts
+
 os.makedirs(exps_path, exist_ok=True)
 
 def _suggest_mlp_layers(trial):
@@ -81,8 +84,18 @@ def objective(trial):
     trial.set_user_attr("config", base_config)
 
     lib.dump_config(base_config, exps_path / 'config.toml')
+    try:
+        subprocess.run([sys.executable, f'{pipeline}', '--config', f'{exps_path / "config.toml"}', '--train', '--change_val'], check=True, env=my_env)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+    print("Finished to run pipeline from tune_ddpm")
+    print("----->FINISHED to run pipeline from tune_ddpm<--------: ")
+    
+    # subprocess.check_output("dir /f",shell=True,stderr=subprocess.STDOUT)
+    #     except subprocess.CalledProcessError as e:
+    # raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
 
-    subprocess.run(['python3.9', f'{pipeline}', '--config', f'{exps_path / "config.toml"}', '--train', '--change_val'], check=True)
+
 
     n_datasets = 5
     score = 0.0
@@ -91,7 +104,7 @@ def objective(trial):
         base_config['sample']['seed'] = sample_seed
         lib.dump_config(base_config, exps_path / 'config.toml')
         
-        subprocess.run(['python3.9', f'{pipeline}', '--config', f'{exps_path / "config.toml"}', '--sample', '--eval', '--change_val'], check=True)
+        subprocess.run([sys.executable, f'{pipeline}', '--config', f'{exps_path / "config.toml"}', '--sample', '--eval', '--change_val'], check=True,  env=my_env)
 
         report_path = str(Path(base_config['parent_dir']) / f'results_{args.eval_model}.json')
         report = lib.load_json(report_path)
@@ -103,6 +116,7 @@ def objective(trial):
 
     shutil.rmtree(exps_path / f"{trial.number}")
 
+    print(f"Score calculated: {score / n_datasets}")
     return score / n_datasets
 
 study = optuna.create_study(
@@ -110,18 +124,37 @@ study = optuna.create_study(
     sampler=optuna.samplers.TPESampler(seed=0),
 )
 
+print("---Starting optimizing Optune run---")
 study.optimize(objective, n_trials=50, show_progress_bar=True)
+print("---Finished optimizing Optune run---")
 
 best_config_path = parent_path / f'{prefix}_best/config.toml'
 best_config = study.best_trial.user_attrs['config']
+
+print("Best config found with: ")
+print(best_config)
 best_config["parent_dir"] = str(parent_path / f'{prefix}_best/')
 
 os.makedirs(parent_path / f'{prefix}_best', exist_ok=True)
 lib.dump_config(best_config, best_config_path)
 lib.dump_json(optuna.importance.get_param_importances(study), parent_path / f'{prefix}_best/importance.json')
 
-subprocess.run(['python3.9', f'{pipeline}', '--config', f'{best_config_path}', '--train', '--sample'], check=True)
+subprocess.run([sys.executable, f'{pipeline}', '--config', f'{best_config_path}', '--train', '--sample'], check=True, env=my_env)
+
+if not os.path.isdir('outputs'):
+    os.mkdir('outputs')
+
+try:
+    print("Found files in " + str(parent_path / f'{prefix}_best') + ": ")
+    print(os.listdir(str(parent_path / f'{prefix}_best')))
+    import shutil
+    shutil.copyfile(str(parent_path / f'{prefix}_best' / "model.pt"), "outputs/model.pt")
+    print("Saved model to outputs folder")
+except Exception as e:
+    print(e)
 
 if args.eval_seeds:
     best_exp = str(parent_path / f'{prefix}_best/config.toml')
-    subprocess.run(['python3.9', f'{eval_seeds}', '--config', f'{best_exp}', '10', "ddpm", eval_type, args.eval_model, '5'], check=True)
+    print("---Starting eval_seeds.py---")
+    subprocess.run([sys.executable, f'{eval_seeds}', '--config', f'{best_exp}', '10', "ddpm", eval_type, args.eval_model, '5'], check=True, env=my_env)
+    print("---Finished eval_seeds.py---")
