@@ -42,6 +42,27 @@
                 "dppm_test_1",
                 "--eval_seeds"
             ]
+        },
+        {
+            "name": "Eval_seed",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env" : {
+                // "REPO_DIR": "C:/Users/SvenG/Documents/Git_Repos/Tabular-Data-Synthesis-Repos/tab-ddpm",
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args":[
+                "--config",
+                "exp/adult/ddpm_cb_best/config.toml",
+                "5",
+                "ddpm",
+                "synthetic",
+                "catboost",
+                "5",  
+            ]
         }
     ]
-}
+}    
