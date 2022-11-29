@@ -111,13 +111,7 @@ def sample(
     #         num_samples=8,
     #         replacement=True
     #     )
-    print(f"Sampling finished, x_gen has shape {x_gen.shape} and y_gen has shape {y_gen.shape}")
-    total = torch.cat((x_gen, y_gen.unsqueeze(-1)), dim=-1)
-    import pandas as pd
-    df = pd.DataFrame(total.numpy(), columns =["0","1","2","3","4","5","6","7","8","9","10","11","12","13","y"])
-    if not os.path.isdir('outputs'):
-        os.mkdir('outputs')
-    df.to_csv('outputs/output_syn.csv', index=False)
+
 
     X_gen, y_gen = x_gen.numpy(), y_gen.numpy()
 

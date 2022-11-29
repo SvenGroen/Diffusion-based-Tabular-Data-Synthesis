@@ -126,6 +126,53 @@ def train_catboost(
         eval_set=(X['val'], D.y['val']),
         verbose=100
     )
+    # ---- added ----     
+    import numpy as np
+    print(f"Sampling finished for seed {seed}")
+    print(f" x_num shape: {X['train'].shape} \t y_gen shape: {D.y['train'].shape}\t")
+    try:
+        total = np.concatenate((X['train'],  np.expand_dims(D.y['train'],-1)), axis=-1)
+        import pandas as pd
+        df = pd.DataFrame(total, columns =["0","1","2","3","4","5","6","7","8","9","10","11","12","13","y"])
+        if not os.path.isdir('outputs'):
+            os.mkdir('outputs')
+        df.to_csv(f'outputs/output_syn{seed}.csv', index=False)
+    except Exception as e:
+        print("Could not save synthetic dataset. Error:")
+        print(e)
+
+    
+    print('trying to load real data...')
+
+    X_num_r, X_cat_r, y_r = read_pure_data(real_data_path)
+    X_num_test_r, X_cat_test_r, y_test_r = read_pure_data(real_data_path, 'test')
+    D_r = lib.Dataset(
+    {'train': X_num_r, 'val': X_num_val, 'test': X_num_test_r} if X_num_r is not None else None,
+    {'train': X_cat_r, 'val': X_cat_val, 'test': X_cat_test_r} if X_cat_r is not None else None,
+    {'train': y_r, 'val': y_val, 'test': y_test_r},
+    {},
+    lib.TaskType(info['task_type']),
+    info.get('n_classes')
+    )
+    D_r = lib.transform_dataset(D_r, T, None)
+    X_r = concat_features(D_r)
+
+    print(f" x_num shape: {X_r['train'].shape} \t y_gen shape: {D_r.y['train'].shape}\t")
+    try:
+        total = np.concatenate((X_r['train'],  np.expand_dims(D_r.y['train'],-1)), axis=-1)
+        import pandas as pd
+        df = pd.DataFrame(total, columns =["0","1","2","3","4","5","6","7","8","9","10","11","12","13","y"])
+        if not os.path.isdir('outputs'):
+            os.mkdir('outputs')
+        df.to_csv(f'outputs/output_r{seed}.csv', index=False)
+    except Exception as e:
+        print("Could not save real dataset. Error:")
+        print(e)
+
+
+
+    # ---- ---- ----
+
     predictions = {k: predict(v) for k, v in X.items()}
     print(predictions['train'].shape)
 

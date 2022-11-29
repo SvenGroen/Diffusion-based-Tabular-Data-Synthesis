@@ -160,3 +160,16 @@ def train(
     trainer.loss_history.to_csv(os.path.join(parent_dir, 'loss.csv'), index=False)
     torch.save(diffusion._denoise_fn.state_dict(), os.path.join(parent_dir, 'model.pt'))
     torch.save(trainer.ema_model.state_dict(), os.path.join(parent_dir, 'model_ema.pt'))
+
+    if not os.path.isdir('outputs'):
+        os.mkdir('outputs')
+    try:
+        print("Found files in " + str(parent_dir) + ": ")
+        print(os.listdir(str(parent_dir)))
+        import shutil
+        shutil.copyfile(str(parent_dir + "/model.pt"), "outputs/model.pt")
+        shutil.copyfile(str(parent_dir + "/model_ema.pt"), "outputs/model_ema.pt")
+        print("Saved model to outputs folder")
+    except Exception as e:
+        print(e)
+

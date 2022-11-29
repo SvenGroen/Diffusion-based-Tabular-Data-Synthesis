@@ -18,6 +18,9 @@ pipeline = {
     'tvae': 'CTGAN/pipeline_tvae.py'
 }
 
+my_env = os.environ.copy()
+my_env["PYTHONPATH"] = os.getcwd() # Needed to run the subscripts
+
 def eval_seeds(
     raw_config,
     n_seeds,
@@ -50,11 +53,13 @@ def eval_seeds(
             temp_config['sample']['seed'] = sample_seed
             lib.dump_config(temp_config, dir_ / "config.toml")
             if eval_type != 'real' and n_datasets > 1:
-                subprocess.run(['python3.9', f'{pipeline[sampling_method]}', '--config', f'{str(dir_ / "config.toml")}', '--sample'], check=True)
-
+                print(f"---STARTING SAMPLING {sample_seed}---")
+                subprocess.run([sys.executable, f'{pipeline[sampling_method]}', '--config', f'{str(dir_ / "config.toml")}', '--sample'], check=True, env=my_env)
+                print(f"---Finished SAMPLING {sample_seed}---")
             T_dict = deepcopy(raw_config['eval']['T'])
             for seed in range(n_seeds):
-                print(f'**Eval Iter: {sample_seed*n_seeds + (seed + 1)}/{n_seeds * n_datasets}**')
+                print(f'\n**Eval Iter: {sample_seed*n_seeds + (seed + 1)}/{n_seeds * n_datasets}**')
+                print(f"Model_type: {model_type}")
                 if model_type == "catboost":
                     T_dict["normalization"] = None
                     T_dict["cat_encoding"] = None
@@ -77,10 +82,11 @@ def eval_seeds(
                         seed=seed,
                         change_val=change_val
                     )
-
+                print("**Finished Evaluation Iteration**\n")
                 metrics_seeds_report.add_report(metric_report)
 
     metrics_seeds_report.get_mean_std()
+    print("Final result: ")
     res = metrics_seeds_report.print_result()
     if os.path.exists(parent_dir/ f"eval_{model_type}.json"):
         eval_dict = lib.load_json(parent_dir / f"eval_{model_type}.json")

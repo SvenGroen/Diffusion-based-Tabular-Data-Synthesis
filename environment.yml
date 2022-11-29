@@ -34,5 +34,5 @@ dependencies:
 
 variables:
   # python path variable
-  - PYTHONPATH: ~/cloudfiles/code/Users/Sven.Groen/git_repos/tab-ddpm/tab_ddpm
+  - PYTHONPATH: /tab_ddpm
 
