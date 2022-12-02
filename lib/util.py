@@ -27,6 +27,7 @@ RawConfig = Dict[str, Any]
 Report = Dict[str, Any]
 T = TypeVar('T')
 
+RUNS_IN_CLOUD = os.getenv("AZURE_EXTENSION_DIR") is not None
 
 class Part(enum.Enum):
     TRAIN = 'train'

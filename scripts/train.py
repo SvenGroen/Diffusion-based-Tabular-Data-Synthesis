@@ -127,7 +127,7 @@ def train(
         model_params,
         num_numerical_features,
         category_sizes=dataset.get_category_sizes('train')
-    )
+    ) # maybe later add U-Net 1D
     model.to(device)
 
     # train_loader = lib.prepare_beton_loader(dataset, split='train', batch_size=batch_size)

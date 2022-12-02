@@ -7,6 +7,7 @@ from sample import sample
 from eval_catboost import train_catboost
 from eval_mlp import train_mlp
 from eval_simple import train_simple
+from lib.util import RUNS_IN_CLOUD
 import pandas as pd
 import matplotlib.pyplot as plt
 import zero
@@ -40,7 +41,9 @@ def main():
         device = torch.device(raw_config['device'])
     else:
         device = torch.device('cuda:1')
-    
+    if RUNS_IN_CLOUD and not "outputs" in raw_config["parent_dir"]:
+        raw_config["parent_dir"] = os.path.join('outputs', raw_config["parent_dir"])
+
     timer = zero.Timer()
     timer.run()
     save_file(os.path.join(raw_config['parent_dir'], 'config.toml'), args.config)

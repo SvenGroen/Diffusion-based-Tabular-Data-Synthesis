@@ -5,6 +5,23 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "preprocess",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env" : {
+                // "REPO_DIR": "C:/Users/SvenG/Documents/Git_Repos/Tabular-Data-Synthesis-Repos/tab-ddpm",
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args":[
+                "--data_folder",
+                "C:\\Users\\SvenG\\Documents\\Git_Repos\\Tabular-Data-Synthesis-Repos\\tab-ddpm\\data\\adult-bgm",
+                "bgm"
+            ]
+        },
+        {
             "name": "Pipeline",
             "type": "python",
             "request": "launch",

@@ -1,6 +1,7 @@
 import subprocess
 import lib
 import os
+import sys
 import optuna
 from copy import deepcopy
 import shutil
@@ -26,6 +27,9 @@ pipeline = f'scripts/pipeline.py'
 base_config_path = f'exp/{ds_name}/config.toml'
 parent_path = Path(f'exp/{ds_name}/')
 exps_path = Path(f'exp/{ds_name}/many-exps/') # temporary dir. maybe will be replaced with tempdiвdr
+if lib.util.RUNS_IN_CLOUD and not "outputs" in parent_path:
+    parent_path = 'outputs' / parent_path
+    exps_path = 'outputs' / exps_path
 eval_seeds = f'scripts/eval_seeds.py'
 
 my_env = os.environ.copy()
@@ -141,17 +145,18 @@ lib.dump_json(optuna.importance.get_param_importances(study), parent_path / f'{p
 
 subprocess.run([sys.executable, f'{pipeline}', '--config', f'{best_config_path}', '--train', '--sample'], check=True, env=my_env)
 
-if not os.path.isdir('outputs'):
-    os.mkdir('outputs')
-
-try:
-    print("Found files in " + str(parent_path / f'{prefix}_best') + ": ")
-    print(os.listdir(str(parent_path / f'{prefix}_best')))
-    import shutil
-    shutil.copyfile(str(parent_path / f'{prefix}_best' / "model.pt"), "outputs/model.pt")
-    print("Saved model to outputs folder")
-except Exception as e:
-    print(e)
+# Added------------
+# if not os.path.isdir('outputs'):
+#     os.mkdir('outputs')
+# try:
+#     print("Found files in " + str(parent_path / f'{prefix}_best') + ": ")
+#     print(os.listdir(str(parent_path / f'{prefix}_best')))
+#     import shutil
+#     shutil.copyfile(str(parent_path / f'{prefix}_best' / "model.pt"), "outputs/model.pt")
+#     print("Saved model to outputs folder")
+# except Exception as e:
+#     print(e)
+# ----------------
 
 if args.eval_seeds:
     best_exp = str(parent_path / f'{prefix}_best/config.toml')

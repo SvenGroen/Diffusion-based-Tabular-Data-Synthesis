@@ -4,6 +4,7 @@ import argparse
 from eval_catboost import train_catboost
 from eval_mlp import train_mlp
 from pathlib import Path
+from lib.util import RUNS_IN_CLOUD
 
 parser = argparse.ArgumentParser()
 parser.add_argument('ds_name', type=str)
@@ -82,7 +83,7 @@ def objective(trial):
         train_func = train_mlp
         T_dict = {
             "seed": 0,
-            "normalization": "quantile",
+            "normalization": "quantile", # maybe none later
             "num_nan_policy": None,
             "cat_nan_policy": None,
             "cat_min_frequency": None,
@@ -141,5 +142,8 @@ study.optimize(objective, n_trials=100, show_progress_bar=True)
 bets_params = study.best_trial.user_attrs['params']
 
 best_params_path = f"tuned_models/{args.model}/{args.ds_name}_{args.tune_type}.json"
+if RUNS_IN_CLOUD:
+    output_path = Path("outputs").mkdir(parents=True, exist_ok=True)
+    best_params_path = Path("outputs") / best_params_path
 
 lib.dump_json(bets_params, best_params_path)

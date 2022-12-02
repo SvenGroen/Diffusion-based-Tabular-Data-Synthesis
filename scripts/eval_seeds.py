@@ -3,6 +3,7 @@ import subprocess
 import tempfile
 import lib
 import os
+import sys
 import shutil
 from pathlib import Path
 from copy import deepcopy
