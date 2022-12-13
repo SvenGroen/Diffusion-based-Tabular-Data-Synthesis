@@ -4,6 +4,7 @@ import zero
 import os
 from tab_ddpm.gaussian_multinomial_diffsuion import GaussianMultinomialDiffusion
 from tab_ddpm.utils import FoundNANsError
+from tabular_processing.tabular_transformer import TabularTransformer
 from utils_train import get_model, make_dataset
 from lib import round_columns
 import lib
@@ -33,9 +34,31 @@ def sample(
     disbalance = None,
     device = torch.device('cuda:1'),
     seed = 0,
-    change_val = False
+    change_val = False,
+    processor_type = None
 ):
     zero.improve_reproducibility(seed)
+
+    # add special processing
+
+    # tabular_Transformer = TabularTransformer(
+    # real_data_path, 
+    # processor_type,
+    # num_classes=model_params['num_classes'],
+    # is_y_cond=model_params['is_y_cond'])
+    # tabular_Transformer.transform()
+    # real_data_path = tabular_Transformer.save_data()
+    tabular_Transformer = TabularTransformer(
+        real_data_path, 
+        processor_type,
+        num_classes=model_params['num_classes'],
+        is_y_cond=model_params['is_y_cond'])
+    # also transform because information from transformation process might be needed
+    # TODO: find a way to only use fit and not transform for faster processing
+    # TODO: save and load the tabular transformer
+    tabular_Transformer.fit_transform() 
+    real_data_path = os.path.join(real_data_path, processor_type)
+
 
     T = lib.Transformations(**T_dict)
     D = make_dataset(
@@ -43,7 +66,8 @@ def sample(
         T,
         num_classes=model_params['num_classes'],
         is_y_cond=model_params['is_y_cond'],
-        change_val=change_val
+        change_val=change_val,
+        skip_test_cat_encode=True
     )
 
     K = np.array(D.get_category_sizes('train'))
@@ -60,9 +84,15 @@ def sample(
         category_sizes=D.get_category_sizes('train')
     )
 
-    model.load_state_dict(
-        torch.load(model_path, map_location="cpu")
-    )
+    try:
+        model.load_state_dict(
+            torch.load(model_path, map_location="cpu")
+        )
+        print("Model Loaded Successfully!")
+    except FileNotFoundError:
+        print('-------->Model not found<--------')
+        
+
 
     diffusion = GaussianMultinomialDiffusion(
         K,
@@ -123,7 +153,7 @@ def sample(
     # X_gen = X_gen[np.all(idx, axis=1)]
     # y_gen = y_gen[np.all(idx, axis=1)]
     ###
-
+    # Inverse Normalization
     num_numerical_features = num_numerical_features + int(D.is_regression and not model_params["is_y_cond"])
 
     X_num_ = X_gen
@@ -153,6 +183,13 @@ def sample(
         if len(disc_cols):
             X_num = round_columns(X_num_real, X_num, disc_cols)
 
+    # Inverse special processing
+
+    X_cat, X_num, y_gen = tabular_Transformer.inverse_transform(X_cat, X_num, y_gen) 
+    # TODO: check if identity is working 
+    # + check if cat values are strings of floats and if nums are still normalized
+
+    # Save for Evaluation
     if num_numerical_features != 0:
         print("Num shape: ", X_num.shape)
         np.save(os.path.join(parent_dir, 'X_num_train'), X_num)

@@ -20,6 +20,24 @@
                 "C:\\Users\\SvenG\\Documents\\Git_Repos\\Tabular-Data-Synthesis-Repos\\tab-ddpm\\data\\adult-bgm",
                 "bgm"
             ]
+        }       
+        ,{
+            "name": "tune_eval_model",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env" : {
+                // "REPO_DIR": "C:/Users/SvenG/Documents/Git_Repos/Tabular-Data-Synthesis-Repos/tab-ddpm",
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args":[
+                "adult-bgm",
+                "catboost",
+                "val",
+                "cpu"
+            ]
         },
         {
             "name": "Pipeline",
@@ -80,6 +98,20 @@
                 "catboost",
                 "5",  
             ]
-        }
+        }, 
+        {
+            "name": "Generic Python File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env" : {
+                // "REPO_DIR": "C:/Users/SvenG/Documents/Git_Repos/Tabular-Data-Synthesis-Repos/tab-ddpm",
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args":[
+            ]
+        }   
     ]
 }    

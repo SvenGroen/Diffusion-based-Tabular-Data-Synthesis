@@ -119,7 +119,17 @@ def objective(trial):
         score /= 5
 
     elif args.tune_type == "val":
-        val_m1, val_m2, test_m1, test_m2 = train_func(
+        # val_m1, val_m2, test_m1, test_m2 = train_func(
+        #     parent_dir=None,
+        #     real_data_path=data_path,
+        #     eval_type="real",
+        #     T_dict=T_dict,
+        #     params=params,
+        #     change_val=False,
+        #     device=args.device
+        # )
+        # score = val_m2
+        score = train_func(
             parent_dir=None,
             real_data_path=data_path,
             eval_type="real",
@@ -127,9 +137,9 @@ def objective(trial):
             params=params,
             change_val=False,
             device=args.device
-        )
-        score = val_m2
-    
+        ).get_metric(split="val", metric="f1")
+
+
     return score
 
 study = optuna.create_study(

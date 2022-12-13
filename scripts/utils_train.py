@@ -39,7 +39,8 @@ def make_dataset(
     T: lib.Transformations,
     num_classes: int,
     is_y_cond: bool,
-    change_val: bool
+    change_val: bool,
+    skip_test_cat_encode: bool = False
 ):
     # classification
     if num_classes > 0:
@@ -86,4 +87,4 @@ def make_dataset(
     if change_val:
         D = lib.change_val(D)
     
-    return lib.transform_dataset(D, T, None)
+    return lib.transform_dataset(D, T, None, skip_test_cat_encode=True)

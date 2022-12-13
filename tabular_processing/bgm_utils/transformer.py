@@ -421,15 +421,15 @@ class DataTransformer:
 
     def split_cat_num(self, data, cat_style="one-hot"):
         assert cat_style in ["one-hot", "labels"]
-        self.cat_style = cat_style
-        if cat_style == "one-hot":
-            cat_function = lambda x: x 
-        elif cat_style == 'labels':
-            cat_function = lambda x: np.argmax(x, axis=1)
-
+        self.reorder_info = []
         cat = []
         num = []
-        self.reorder_info = []
+        self.cat_style = cat_style
+        if cat_style == "one-hot":
+            cat_function = lambda x, **kwargs: x 
+        elif cat_style == 'labels':
+            cat_function = lambda x: np.argmax(x, axis=1)
+        
         st = 0
         for id_, info in enumerate(self.meta):
             if info['type'] == "continuous":
@@ -437,37 +437,40 @@ class DataTransformer:
                     u = data[:, st]
                     v = data[:, st + 1:st + 1 + np.sum(self.components[id_])]
                     num.append(u)
-                    self.reorder_info.append(("num",1)) # numerical columns always have 1 component
+                    self.reorder_info.append(("num",1, 1)) # numerical columns always have 1 component
+                    len_v = v.shape[1]
                     v=cat_function(v)
                     v = v.reshape(-1, 1) if len(v.shape) == 1 else v
                     cat.append(v)
-                    self.reorder_info.append(("cat",v.shape[1]))
+                    self.reorder_info.append(("cat",v.shape[1], len_v))
                     st += 1 + np.sum(self.components[id_])
 
                 else:
                     u = data[:, st]
                     num.append(u)
-                    self.reorder_info.append(("num",1))
+                    self.reorder_info.append(("num",1, 1))
                     st += 1
 
             elif info['type'] == "mixed":
                 u = data[:, st]
                 v = data[:, (st + 1):(st + 1) + len(info['modal']) + np.sum(self.components[id_])]
                 num.append(u)
-                self.reorder_info.append(("num",1))
+                self.reorder_info.append(("num",1, 1))
+                len_v = v.shape[1]
                 v=cat_function(v)
                 v = v.reshape(-1, 1) if len(v.shape) == 1 else v
                 cat.append(v)
-                self.reorder_info.append(("cat",v.shape[1]))
+                self.reorder_info.append(("cat",v.shape[1], len_v))
 
                 st += 1 + np.sum(self.components[id_]) + len(info['modal'])
 
             else:
                 v = data[:, st:st + info['size']]
+                len_v = v.shape[1]
                 v=cat_function(v)
                 v = v.reshape(-1, 1) if len(v.shape) == 1 else v
                 cat.append(v)
-                self.reorder_info.append(("cat", v.shape[1]))
+                self.reorder_info.append(("cat", v.shape[1], len_v))
                 st += info['size']
 
         self.x_cat = np.concatenate(cat, axis=-1)
@@ -479,17 +482,19 @@ class DataTransformer:
     def inverse_split_cat_num(self, x_cat, x_num):
         assert self.reorder_info is not None and len(self.reorder_info) > 0, "data has not been split yet"
         assert self.cat_style is not None, "data has not been split yet"
+
+
         total = []
         if self.cat_style == "one-hot":
-            cat_function = lambda x: x 
+            cat_function = lambda x, **kwargs: x 
         elif self.cat_style == 'labels':
-            cat_function = lambda x: np.eye(x.max()+1)[x.squeeze()] # x needs to be oh shape (n,)
-        for info, st in self.reorder_info:
+            cat_function = lambda x, length: np.eye(int(length))[x.squeeze().astype(int)] # x needs to be oh shape (n,) #+1
+        for info, st, length in self.reorder_info:
             if info == "num":
                 total.append(x_num[:, :st]) # needs to be [:,:st] not [:, st] because we need (n,1) and not (n,)
                 x_num = np.delete(x_num, range(st), axis=1)
             else:
-                total.append(cat_function(x_cat[:, :st]))
+                total.append(cat_function(x_cat[:, :st], length))
                 x_cat = np.delete(x_cat, range(st), axis=1)
         return np.concatenate(total, axis=-1)
 

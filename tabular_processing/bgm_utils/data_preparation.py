@@ -6,7 +6,7 @@ from sklearn import model_selection
 
 class DataPrep(object):
 
-    def __init__(self, raw_df: pd.DataFrame, categorical: list, log: list, mixed: dict, general: list,
+    def __init__(self, categorical: list, log: list, mixed: dict, general: list,
                  non_categorical: list, integer: list):
 
         self.categorical_columns = categorical
@@ -15,6 +15,10 @@ class DataPrep(object):
         self.general_columns = general
         self.non_categorical_columns = non_categorical
         self.integer_columns = integer
+        super().__init__()
+        
+
+    def prep(self, raw_df: pd.DataFrame):
         self.column_types = dict()
         self.column_types["categorical"] = []
         self.column_types["mixed"] = {}
@@ -25,7 +29,6 @@ class DataPrep(object):
         self.df = raw_df
         self.df = self.df.replace(r' ', np.nan)
         self.df = self.df.fillna('empty')
-
         all_columns = set(self.df.columns)
         irrelevant_missing_columns = set(self.categorical_columns)
         relevant_missing_columns = list(all_columns - irrelevant_missing_columns)
@@ -86,8 +89,10 @@ class DataPrep(object):
 
             elif column in self.general_columns:
                 self.column_types["general"].append(column_index)
+        
+        return self.df
 
-        super().__init__()
+
 
     def inverse_prep(self, data, eps=1):
 

@@ -1,5 +1,5 @@
-parent_dir = "exp/adult/check"
-real_data_path = "data/adult/"
+parent_dir = "outputs/exp/adult-bgm/adultbgm_tuning_best"
+real_data_path = "data/adult-bgm/"
 num_numerical_features = 6
 model_type = "mlp"
 seed = 0
@@ -11,21 +11,23 @@ is_y_cond = true
 
 [model_params.rtdl_params]
 d_layers = [
+    128,
     256,
     256,
+    1024,
 ]
 dropout = 0.0
 
 [diffusion_params]
-num_timesteps = 1000
+num_timesteps = 100
 gaussian_loss_type = "mse"
 scheduler = "cosine"
 
 [train.main]
-steps = 1000
-lr = 0.001
-weight_decay = 1e-05
-batch_size = 4096
+steps = 5000
+lr = 0.0015758647906489686
+weight_decay = 0.0
+batch_size = 256
 
 [train.T]
 seed = 0
@@ -36,13 +38,11 @@ cat_min_frequency = "__none__"
 cat_encoding = "__none__"
 y_policy = "default"
 
-[tabular_processor]
-type = "identity"
-
 [sample]
-num_samples = 216000
+num_samples = 20
 batch_size = 10000
 seed = 0
+disbalance = "__none__"
 
 [eval.type]
 eval_model = "catboost"

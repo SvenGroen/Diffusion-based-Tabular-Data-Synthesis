@@ -361,11 +361,13 @@ class Transformations:
     y_policy: Optional[YPolicy] = 'default'
 
 
+
 def transform_dataset(
     dataset: Dataset,
     transformations: Transformations,
     cache_dir: Optional[Path],
-    return_transforms: bool = False
+    return_transforms: bool = False,
+    skip_test_cat_encode: bool = False,
 ) -> Dataset:
     # WARNING: the order of transformations matters. Moreover, the current
     # implementation is not ideal in that sense.
@@ -414,6 +416,7 @@ def transform_dataset(
         X_cat = cat_process_nans(dataset.X_cat, transformations.cat_nan_policy)
         if transformations.cat_min_frequency is not None:
             X_cat = cat_drop_rare(X_cat, transformations.cat_min_frequency)
+        X_cat_test = X_cat.pop("test") if skip_test_cat_encode else None
         X_cat, is_num, cat_transform = cat_encode(
             X_cat,
             transformations.cat_encoding,
@@ -421,6 +424,8 @@ def transform_dataset(
             transformations.seed,
             return_encoder=True
         )
+        if skip_test_cat_encode:
+            X_cat["test"] = X_cat_test 
         if is_num:
             X_num = (
                 X_cat

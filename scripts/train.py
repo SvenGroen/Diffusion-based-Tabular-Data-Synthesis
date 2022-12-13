@@ -8,6 +8,7 @@ from utils_train import get_model, make_dataset, update_ema
 import lib
 import pandas as pd
 from azureml.core import Run
+from tabular_processing.tabular_transformer import TabularTransformer
 
 class Trainer:
     def __init__(self, diffusion, train_iter, lr, weight_decay, steps, device=torch.device('cuda:1')):
@@ -94,12 +95,25 @@ def train(
     num_numerical_features = 0,
     device = torch.device('cuda:1'),
     seed = 0,
-    change_val = False
+    change_val = False,
+    processor_type = None
 ):
     real_data_path = os.path.normpath(real_data_path)
     parent_dir = os.path.normpath(parent_dir)
 
     zero.improve_reproducibility(seed)
+
+    # add special processing
+
+    tabular_Transformer = TabularTransformer(
+        real_data_path, 
+        processor_type,
+        num_classes=model_params['num_classes'],
+        is_y_cond=model_params['is_y_cond'])
+    tabular_Transformer.fit_transform()
+    real_data_path = tabular_Transformer.save_data()
+
+
 
     T = lib.Transformations(**T_dict)
 
@@ -108,7 +122,8 @@ def train(
         T,
         num_classes=model_params['num_classes'],
         is_y_cond=model_params['is_y_cond'],
-        change_val=change_val
+        change_val=change_val,
+        skip_test_cat_encode=True
     )
 
     K = np.array(dataset.get_category_sizes('train'))

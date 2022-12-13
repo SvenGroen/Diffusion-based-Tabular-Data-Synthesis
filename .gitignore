@@ -14,7 +14,7 @@ catboost_info/
 **/**.csv
 exp/**/**/results_catboost.json
 exp/**/**/results_mlp.json
-
+exp/**/**/*log*.txt
 configs/
 data/
 junk/

@@ -405,7 +405,7 @@ class GaussianMultinomialDiffusion(torch.nn.Module):
 
         log_EV_xtmin_given_xt_given_xstart = \
             unnormed_logprobs \
-            - sliced_logsumexp(unnormed_logprobs, self.offsets)
+            - sliced_logsumexp(unnormed_logprobs, self.offsets.long()) #EDIT: added .long() for slice operation
 
         return log_EV_xtmin_given_xt_given_xstart
 

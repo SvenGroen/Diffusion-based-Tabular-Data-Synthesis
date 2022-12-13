@@ -197,8 +197,8 @@ def _save(
         'name': name,
         'id': (dataset_dir.name + id_suffix) if id_ is None else id_,
         'task_type': task_type.value,
-        'n_num_features': (0 if X_num is None else next(iter(X_num.values())).shape[1]),
-        'n_cat_features': (0 if X_cat is None else next(iter(X_cat.values())).shape[1]),
+        'n_num_features': (0 if X_num is None else X_num["train"].shape[1]),
+        'n_cat_features': (0 if X_cat is None else X_cat["train"].shape[1]),
     } | {f'{k}_size': len(v) for k, v in y.items()}
     if task_type == TaskType.MULTICLASS:
         info['n_classes'] = len(set(y['train']))

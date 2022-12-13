@@ -5,7 +5,7 @@ import numpy as np
 import catboost.datasets
 from pathlib import Path
 from tabular_processing.dataset import TaskType, _make_split, _apply_split, _save
-from tabular_processing.bgm_processing.bgm_transformer import BGMTransformer
+from tabular_processing.bgm_utils.bgm_transformer import BGMTransformer
 CAT_MISSING_VALUE = '__nan__'
 
 def preprocess(data_folder, config, preprocess_method):

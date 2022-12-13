@@ -447,7 +447,7 @@ class MLPDiffusion(nn.Module):
             nn.SiLU(),
             nn.Linear(dim_t, dim_t)
         )
-    
+
     def forward(self, x, timesteps, y=None):
         emb = self.time_embed(timestep_embedding(timesteps, self.dim_t))
         if self.is_y_cond and y is not None:

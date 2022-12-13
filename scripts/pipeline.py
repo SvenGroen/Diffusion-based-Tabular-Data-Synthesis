@@ -37,12 +37,23 @@ def main():
     args = parser.parse_args()
 
     raw_config = lib.load_config(args.config)
+
+    if not RUNS_IN_CLOUD:
+        # for debugging
+        raw_config["diffusion_params"]["num_timesteps"] = 10
+        raw_config["train"]["main"]["steps"] = 2 
+        raw_config["device"] = "cpu"
+        raw_config['sample']['num_samples'] = 100
+        # raw_config["sample"]["disbalance"] = "fill"
+
     if 'device' in raw_config:
         device = torch.device(raw_config['device'])
     else:
         device = torch.device('cuda:1')
     if RUNS_IN_CLOUD and not "outputs" in raw_config["parent_dir"]:
         raw_config["parent_dir"] = os.path.join('outputs', raw_config["parent_dir"])
+    
+
 
     timer = zero.Timer()
     timer.run()
@@ -59,7 +70,8 @@ def main():
             T_dict=raw_config['train']['T'],
             num_numerical_features=raw_config['num_numerical_features'],
             device=device,
-            change_val=args.change_val
+            change_val=args.change_val,
+            processor_type=raw_config["tabular_processor"]["type"],
         )
     if args.sample:
         sample(
@@ -76,7 +88,8 @@ def main():
             num_numerical_features=raw_config['num_numerical_features'],
             device=device,
             seed=raw_config['sample'].get('seed', 0),
-            change_val=args.change_val
+            change_val=args.change_val,
+            processor_type=raw_config["tabular_processor"]["type"]
         )
 
     save_file(os.path.join(raw_config['parent_dir'], 'info.json'), os.path.join(raw_config['real_data_path'], 'info.json'))

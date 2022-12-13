@@ -36,14 +36,17 @@ cat_min_frequency = "__none__"
 cat_encoding = "__none__"
 y_policy = "default"
 
+[tabular_processor]
+type = "identity"
+
 [sample]
 num_samples = 216000
 batch_size = 10000
 seed = 0
 
 [eval.type]
-eval_model = "simple"
-eval_type = "merged"
+eval_model = "catboost"
+eval_type = "synthetic"
 
 [eval.T]
 seed = 0
