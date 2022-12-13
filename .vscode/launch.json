@@ -12,12 +12,12 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "env" : {
-                // "REPO_DIR": "C:/Users/SvenG/Documents/Git_Repos/Tabular-Data-Synthesis-Repos/tab-ddpm",
+
                 "PYTHONPATH": "${workspaceFolder}"
             },
             "args":[
                 "--data_folder",
-                "C:\\Users\\SvenG\\Documents\\Git_Repos\\Tabular-Data-Synthesis-Repos\\tab-ddpm\\data\\adult-bgm",
+                "tab-ddpm\\data\\adult-bgm",
                 "bgm"
             ]
         }       
@@ -29,7 +29,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "env" : {
-                // "REPO_DIR": "C:/Users/SvenG/Documents/Git_Repos/Tabular-Data-Synthesis-Repos/tab-ddpm",
+
                 "PYTHONPATH": "${workspaceFolder}"
             },
             "args":[
@@ -47,12 +47,11 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "env" : {
-                // "REPO_DIR": "C:/Users/SvenG/Documents/Git_Repos/Tabular-Data-Synthesis-Repos/tab-ddpm",
                 "PYTHONPATH": "${workspaceFolder}"
             },
             "args":[
                 "--config",
-                "C:\\Users\\SvenG\\Documents\\Git_Repos\\Tabular-Data-Synthesis-Repos\\tab-ddpm\\exp\\adult\\config.toml",
+                "\\exp\\adult\\config.toml",
                 "--train",
                 "--sample",
                 "--eval"
@@ -66,7 +65,6 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "env" : {
-                // "REPO_DIR": "C:/Users/SvenG/Documents/Git_Repos/Tabular-Data-Synthesis-Repos/tab-ddpm",
                 "PYTHONPATH": "${workspaceFolder}"
             },
             "args":[
@@ -86,7 +84,6 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "env" : {
-                // "REPO_DIR": "C:/Users/SvenG/Documents/Git_Repos/Tabular-Data-Synthesis-Repos/tab-ddpm",
                 "PYTHONPATH": "${workspaceFolder}"
             },
             "args":[
@@ -107,7 +104,6 @@
             "console": "integratedTerminal",
             "justMyCode": false,
             "env" : {
-                // "REPO_DIR": "C:/Users/SvenG/Documents/Git_Repos/Tabular-Data-Synthesis-Repos/tab-ddpm",
                 "PYTHONPATH": "${workspaceFolder}"
             },
             "args":[
