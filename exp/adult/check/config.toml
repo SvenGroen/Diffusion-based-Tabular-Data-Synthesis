@@ -37,7 +37,7 @@ cat_encoding = "__none__"
 y_policy = "default"
 
 [tabular_processor]
-type = "identity"
+type = "bgm"
 
 [sample]
 num_samples = 216000
@@ -46,7 +46,7 @@ seed = 0
 
 [eval.type]
 eval_model = "catboost"
-eval_type = "synthetic"
+eval_type = "real"
 
 [eval.T]
 seed = 0

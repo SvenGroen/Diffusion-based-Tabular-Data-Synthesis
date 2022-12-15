@@ -67,7 +67,7 @@ def sample(
         num_classes=model_params['num_classes'],
         is_y_cond=model_params['is_y_cond'],
         change_val=change_val,
-        skip_test_cat_encode=True
+        skip_splits=["val","test"]
     )
 
     K = np.array(D.get_category_sizes('train'))

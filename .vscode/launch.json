@@ -12,7 +12,6 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "env" : {
-
                 "PYTHONPATH": "${workspaceFolder}"
             },
             "args":[
@@ -29,7 +28,6 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "env" : {
-
                 "PYTHONPATH": "${workspaceFolder}"
             },
             "args":[
@@ -51,10 +49,10 @@
             },
             "args":[
                 "--config",
-                "\\exp\\adult\\config.toml",
-                "--train",
-                "--sample",
-                "--eval"
+                "${workspaceFolder}\\exp\\adult\\config.toml",
+                // "--train",
+                // "--sample",
+                // "--eval"
             ]
         },
         {

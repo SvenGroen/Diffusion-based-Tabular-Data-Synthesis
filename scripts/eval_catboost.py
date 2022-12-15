@@ -170,6 +170,21 @@ def train_catboost(
     #     print(e)
     # ---- ---- ----
 
+    # from tabsyndex.tabsyndex import tabsyndex
+    # real = np.concatenate((X['test'],  np.expand_dims(D.y['test'],-1)), axis=-1)
+    # fake = np.concatenate((X['train'],  np.expand_dims(D.y['train'],-1)), axis=-1)
+    # import pandas as pd
+    # df_real = pd.DataFrame(fake, columns =["0","1","2","3","4","5","6","7","8","9","10","11","12","13","y"], dtype=float)
+    # df_fake = pd.DataFrame(fake, columns =["0","1","2","3","4","5","6","7","8","9","10","11","12","13","y"],dtype=float)  
+    # # make sure they have the same length:
+    # if len(df_real) > len(df_fake):
+    #     df_real = df_real[:len(df_fake)]
+    # else:
+    #     df_fake = df_fake[:len(df_real)]
+
+    # result = tabsyndex(df_real, df_fake, cat_cols=["6","7","8","9","10","11","12","13"], target_type="class")
+
+
     predictions = {k: predict(v) for k, v in X.items()}
     print(predictions['train'].shape)
 

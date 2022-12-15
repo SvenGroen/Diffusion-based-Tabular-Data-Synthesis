@@ -40,7 +40,7 @@ def make_dataset(
     num_classes: int,
     is_y_cond: bool,
     change_val: bool,
-    skip_test_cat_encode: bool = False
+    skip_splits: list = []
 ):
     # classification
     if num_classes > 0:
@@ -87,4 +87,4 @@ def make_dataset(
     if change_val:
         D = lib.change_val(D)
     
-    return lib.transform_dataset(D, T, None, skip_test_cat_encode=True)
+    return lib.transform_dataset(D, T, None, skip_splits=skip_splits)

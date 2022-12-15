@@ -22,7 +22,7 @@ SUPPORTED_PROCESSORS = {
     "bgm": BGMProcessor}
 
 class TabularTransformer:
-    def __init__(self, data_path: Union[str, Path], processor_type: str, is_y_cond: bool = False, num_classes: int = 2):
+    def __init__(self, data_path: Union[str, Path], processor_type: str, is_y_cond: bool = False, num_classes: int = 2, splits: list[str] = ["train","val", "test"]):
         self.data_path = data_path if isinstance(data_path, Path) else Path(data_path)
         self.config = json.load(open(self.data_path / "info.json"))
         self.x_cat = {}
@@ -30,7 +30,7 @@ class TabularTransformer:
         self.y = {}
         self.is_y_cond = is_y_cond
         self.num_classes = num_classes
-        self.load_data()
+        self.load_data(splits=splits)
         self.processor_type = processor_type if processor_type is not None else "identity"
         self.processor = self._get_processor_instance()
     
@@ -38,7 +38,7 @@ class TabularTransformer:
         if self.processor_type not in SUPPORTED_PROCESSORS:
             raise ValueError(f"Processor type {self.processor_type} is not supported.")
         params = self.config["dataset_config"]
-        x_cat, x_num, y = self._get_concat_splits(splits=["train","val"])
+        x_cat, x_num, y = self._get_concat_splits(splits=["train"]) # changed
         return SUPPORTED_PROCESSORS[self.processor_type](x_cat, x_num, y, **params)
 
     def _get_concat_splits(self, splits:list[str] = ["train","val"]) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -58,35 +58,57 @@ class TabularTransformer:
         self.transform()
         pass
 
+    def to_pd_DataFrame(self, splits=["train"]):
+        cat_cols = self.config["dataset_config"]["cat_columns"]
+        num_cols = self.config["dataset_config"]["int_columns"]
+        y_col = self.config["dataset_config"]["target_column"]
+        # remove target column from cat_cols or num_cols
+        if y_col in cat_cols:
+            cat_cols = [col for col in cat_cols if col != y_col]
+        else:
+            num_cols = [col for col in num_cols if col != y_col]
+        x_cat, x_num, y = self._get_concat_splits(splits=splits)
+        df = self.processor.to_pd_DataFrame(x_cat, x_num, y, cat_cols, num_cols, y_col)
+        return df
+
     def transform(self):
         self.processor.fit()
-        x_cat, x_num, y = self._get_concat_splits(splits=["train","val"]) # TODO: Check if no need to transform test
-        train_len = self.x_cat["train"].shape[0]
-        val_len = self.x_cat["val"].shape[0]
+        x_cat, x_num, y = self._get_concat_splits(splits=["train"]) # TODO: Check if no need to transform test and val
+        # train_len = self.x_cat["train"].shape[0]
+        # val_len = self.x_cat["val"].shape[0]
         x_cat, x_num, y = self.processor.transform(x_cat, x_num, y)
         # set transformed data
-        self.x_cat["train"], self.x_cat["val"] = x_cat[:train_len], x_cat[train_len:train_len+val_len]
-        self.x_num["train"], self.x_num["val"] = x_num[:train_len], x_num[train_len:train_len+val_len]
-        self.y["train"], self.y["val"] = y[:train_len], y[train_len:train_len+val_len]
+        # self.x_cat["train"], self.x_cat["val"] = x_cat[:train_len], x_cat[train_len:train_len+val_len]
+        # self.x_num["train"], self.x_num["val"] = x_num[:train_len], x_num[train_len:train_len+val_len]
+        # self.y["train"], self.y["val"] = y[:train_len], y[train_len:train_len+val_len]
+        self.x_cat["train"] = x_cat
+        self.x_num["train"] = x_num
+        self.y["train"] = y
         pass  
 
     def inverse_transform(self, x_cat, x_num, y):
         try:
+            x_num = x_num.astype(np.float64)
             x_cat = x_cat.astype(np.int64) # inverse preprocess from before might transform labels into strings
         except ValueError:
             pass
         x_cat, x_num, y = self.processor.inverse_transform(x_cat, x_num, y)
         try:
+            x_num = x_num.astype(np.float64)
             y = y.astype(np.int64) # inverse preprocess from before might transform labels into strings
         except ValueError:
             pass
         return x_cat, x_num, y
 
-    def load_data(self):
+    def load_data(self, splits=["train", "val", "test"]):
         # load data from data_path
-        # taken from utils_train.py
+        # taken and extended from utils_train.py
+        all_splits = ["train", "val", "test"]
+        self.x_cat = {split: None for split in all_splits}
+        self.x_num = {split: None for split in all_splits}
+        self.y = {split: None for split in all_splits}
         if self.num_classes > 0:
-            for split in ['train', 'val', 'test']:
+            for split in splits:
                 X_num_t, X_cat_t, y_t = lib.read_pure_data(self.data_path, split)
                 if self.x_num is not None:
                     self.x_num[split] = X_num_t
@@ -97,7 +119,7 @@ class TabularTransformer:
                 self.y[split] = y_t
         else:
         # regression
-            for split in ['train', 'val', 'test']:
+            for split in splits:
                 x_num_t, x_cat_t, y_t = lib.read_pure_data(self.data_path, split)
                 if not self.is_y_cond:
                     x_num_t = concat_y_to_X(x_num_t, y_t)
@@ -112,25 +134,42 @@ class TabularTransformer:
         # create temporary directory
         out_dir = self.data_path / self.processor_type
         out_dir.mkdir(exist_ok=True, parents=True)
-        x_cat_train, x_num_train, y_train = self._get_concat_splits(splits=["train","val"])
+        x_cat_train, x_num_train, y_train = self._get_concat_splits(splits=["train"]) #changed
+        x_cat_val, x_num_val, y_val = self._get_concat_splits(splits=["val"])
         x_cat_test, x_num_test, y_test = self._get_concat_splits(splits=["test"])
-        data = {
+        test = {
             k: {"test":v} for k, v in 
             (("X_num", x_num_test), 
             ("X_cat", x_cat_test), 
             ("y", y_test))
             }
+        val = {
+            k: {"val":v} for k, v in 
+            (("X_num", x_num_val), 
+            ("X_cat", x_cat_val), 
+            ("y", y_val))
+            }
+        train = {
+            k: {"train":v} for k, v in 
+            (("X_num", x_num_train), 
+            ("X_cat", x_cat_train), 
+            ("y", y_train))
+            }
+        data = {split:test[split] | val[split] | train[split] for split in ["X_num", "X_cat", "y"]}
         train_len = len(x_cat_train)
+        val_len = len(x_cat_val)
+        train_val_len = train_len + val_len
         data["idx"] = {"test": np.arange(
-                train_len, train_len + len(x_cat_test), dtype=np.int64
+                train_val_len, train_val_len + len(x_cat_test), dtype=np.int64
             )}
-        
-        trainval = {"X_num": x_num_train, "X_cat": x_cat_train, "y": y_train}
-        trainval_idx = _make_split(train_len, trainval["y"], 2)
+
+        trainval_idx ={"train": np.arange(train_len, dtype=np.int64), "val": np.arange(train_len, train_len + val_len, dtype=np.int64)}
+        data["idx"].update(trainval_idx)
+        # trainval_idx = _make_split(train_len, trainval["y"], 2)
         # for x in data['X_cat'].values():
         #     x[x == 'nan'] = CAT_MISSING_VALUE
-        for k, v in _apply_split(trainval, trainval_idx).items():
-            data[k].update(v)
-        _save(out_dir, f"adult-{self.processor_type}", task_type=TaskType[self.config["dataset_config"]["problem_type"].upper()], **data)
+        # for k, v in _apply_split(trainval, trainval_idx).items():
+        #     data[k].update(v)
+        _save(out_dir, f"{self.config['name'].lower()}-{self.processor_type}", task_type=TaskType[self.config["dataset_config"]["problem_type"].upper()], **data)
         return out_dir
     

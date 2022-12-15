@@ -32,4 +32,11 @@ class TabularProcessor(ABC):
     def fit(self, data: np.ndarray) -> None:
         pass
 
+    @staticmethod
+    def to_pd_DataFrame(x_cat, x_num, y, x_cat_cols, x_num_cols, y_cols):
+        import pandas as pd
+        x_cat_df = pd.DataFrame(x_cat, columns=x_cat_cols)
+        x_num_df = pd.DataFrame(x_num, columns=x_num_cols)
+        y_df = pd.DataFrame(y, columns=[y_cols] if not isinstance(y_cols, list) else y_cols)
+        return pd.concat([x_cat_df, x_num_df, y_df], axis=1)
 

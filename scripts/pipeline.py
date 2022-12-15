@@ -1,9 +1,11 @@
+from pathlib import Path
 import tomli
 import shutil
 import os
 import argparse
 from train import train
 from sample import sample
+from eval_similarity import calculate_similarity_score
 from eval_catboost import train_catboost
 from eval_mlp import train_mlp
 from eval_simple import train_simple
@@ -13,6 +15,7 @@ import matplotlib.pyplot as plt
 import zero
 import lib
 import torch
+
 
 def load_config(path) :
     with open(path, 'rb') as f:
@@ -36,6 +39,7 @@ def main():
 
     args = parser.parse_args()
 
+
     raw_config = lib.load_config(args.config)
 
     if not RUNS_IN_CLOUD:
@@ -43,7 +47,7 @@ def main():
         raw_config["diffusion_params"]["num_timesteps"] = 10
         raw_config["train"]["main"]["steps"] = 2 
         raw_config["device"] = "cpu"
-        raw_config['sample']['num_samples'] = 100
+        raw_config['sample']['num_samples'] = 10000 # needs to be large enough to cover all classes
         # raw_config["sample"]["disbalance"] = "fill"
 
     if 'device' in raw_config:
@@ -122,6 +126,16 @@ def main():
                 seed=raw_config['seed'],
                 change_val=args.change_val
             )
+    calculate_similarity_score(
+            parent_dir=raw_config['parent_dir'],
+            real_data_path=raw_config['real_data_path'],
+            eval_type=raw_config['eval']['type']['eval_type'],
+            num_classes=raw_config['model_params']['num_classes'],
+            is_y_cond=raw_config['model_params']['is_y_cond'],
+            T_dict=raw_config['eval']['T'],
+            seed=raw_config['seed'],
+            change_val=args.change_val
+        )
 
     print(f'Elapsed time: {str(timer)}')
 

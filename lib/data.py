@@ -367,7 +367,7 @@ def transform_dataset(
     transformations: Transformations,
     cache_dir: Optional[Path],
     return_transforms: bool = False,
-    skip_test_cat_encode: bool = False,
+    skip_splits: list = [],
 ) -> Dataset:
     # WARNING: the order of transformations matters. Moreover, the current
     # implementation is not ideal in that sense.
@@ -416,7 +416,10 @@ def transform_dataset(
         X_cat = cat_process_nans(dataset.X_cat, transformations.cat_nan_policy)
         if transformations.cat_min_frequency is not None:
             X_cat = cat_drop_rare(X_cat, transformations.cat_min_frequency)
-        X_cat_test = X_cat.pop("test") if skip_test_cat_encode else None
+        # remove cat encoding for certain splits
+        tmp={}
+        for split in skip_splits:
+            tmp[split]=X_cat.pop(split)
         X_cat, is_num, cat_transform = cat_encode(
             X_cat,
             transformations.cat_encoding,
@@ -424,8 +427,8 @@ def transform_dataset(
             transformations.seed,
             return_encoder=True
         )
-        if skip_test_cat_encode:
-            X_cat["test"] = X_cat_test 
+        for split in skip_splits:
+            X_cat[split] = tmp[split] 
         if is_num:
             X_num = (
                 X_cat
