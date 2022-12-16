@@ -12,6 +12,7 @@ import json
 from tabsyndex.tabsyndex import tabsyndex
 from tabular_processing.tabular_transformer import TabularTransformer
 
+
 def calculate_similarity_score(    
     parent_dir,
     real_data_path,
@@ -89,27 +90,38 @@ def calculate_similarity_score(
     report = {}
     report['eval_type'] = eval_type
     report['dataset'] = real_data_path
-    report['metrics'] = sim_score 
+    report['sim_score'] = sim_score 
 
-    
+
     print("SIMILARITY SCORE")
-    for key, value in report['metrics'].items():
+    for key, value in report['sim_score'].items():
         print(f"{key}: {value}")
     print("*"*100)    
 
-    if parent_dir is not None:
-        lib.dump_json(report, os.path.join(parent_dir, "results_sim_score.json"))
+    
 
     if not change_val:
         # save dataframes only after final evaluation
         df_train.to_csv(os.path.join(parent_dir, f"train_{eval_type}.csv"), index=False)
         df_test.to_csv(os.path.join(parent_dir, f"test_{eval_type}.csv"), index=False)
 
+        # Plotting
+        try:
+            from table_evaluator import TableEvaluator
+            te = TableEvaluator(df_test, df_train, cat_cols=train_transform.config["dataset_config"]["cat_columns"])
+            save_dir = os.path.join(parent_dir, "plots")
+            te.visual_evaluation(save_dir=save_dir)
+            output = te.evaluate(return_outputs=True,verbose=True, target_col = train_transform.config["dataset_config"]["target_column"])
+            print(output)
+
+            report['table_evaluator'] = output
+        except:
+            print("TableEvaluator failed")
+
+    if parent_dir is not None:
+        lib.dump_json(report, os.path.join(parent_dir, "results_similarity.json"))
+    
     return report
-
-    # Plott
-    # Save dataframe
-
 
 def _equal_length(df1, df2):
     len1 = len(df1)

@@ -69,7 +69,7 @@
                 "adult",
                 "10",
                 "synthetic",
-                "mlp",
+                "catboost",
                 "dppm_test_1",
                 "--eval_seeds"
             ]

@@ -724,3 +724,26 @@ def load_dataset_info(dataset_dir_name: str) -> Dict[str, Any]:
     info['n_features'] = info['n_num_features'] + info['n_cat_features']
     info['path'] = path
     return info
+
+def average_per_key(list_of_dicts):
+    # Create a dictionary to store the sum of values for each key
+    sums = {}
+    
+    # Iterate through the list of dictionaries
+    for dictionary in list_of_dicts:
+        # Iterate through the keys and values in each dictionary
+        for key, value in dictionary.items():
+            # If the key is not already in the sums dictionary, add it and set the value to 0
+            if key not in sums:
+                sums[key] = 0
+            # Add the value to the running sum for this key
+            sums[key] += value
+    
+    # Create a dictionary to store the averages
+    averages = {}
+    
+    # Divide the sum for each key by the number of dictionaries to get the average
+    for key, sum_value in sums.items():
+        averages[key] = sum_value / len(list_of_dicts)
+    
+    return averages

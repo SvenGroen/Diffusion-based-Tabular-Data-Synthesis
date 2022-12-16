@@ -7,6 +7,7 @@ from copy import deepcopy
 import shutil
 import argparse
 from pathlib import Path
+from azureml.core import Run
 
 parser = argparse.ArgumentParser()
 parser.add_argument('ds_name', type=str)
@@ -15,8 +16,11 @@ parser.add_argument('eval_type', type=str)
 parser.add_argument('eval_model', type=str)
 parser.add_argument('prefix', type=str)
 parser.add_argument('--eval_seeds', action='store_true',  default=False)
-
+parser.add_argument("--debug", action='store_true', default=False)
+run = Run.get_context()
 args = parser.parse_args()
+if args.debug:
+    print("--->DEBUG MODE IS ON<---")
 train_size = args.train_size
 ds_name = args.ds_name
 eval_type = args.eval_type 
@@ -36,6 +40,8 @@ my_env = os.environ.copy()
 my_env["PYTHONPATH"] = os.getcwd() # Needed to run the subscripts
 
 os.makedirs(exps_path, exist_ok=True)
+
+
 
 def _suggest_mlp_layers(trial):
     def suggest_dim(name):
@@ -78,11 +84,18 @@ def objective(trial):
     base_config['diffusion_params']['gaussian_loss_type'] = gaussian_loss_type
     base_config['diffusion_params']['num_timesteps'] = num_timesteps
     # base_config['diffusion_params']['scheduler'] = scheduler
+    if args.debug:
+        base_config['train']['main']['steps'] = 50
+        base_config['train']['main']['batch_size'] = 256
+        base_config['diffusion_params']['num_timesteps'] = 10
+        num_samples = 100
+
 
     base_config['parent_dir'] = str(exps_path / f"{trial.number}")
     base_config['eval']['type']['eval_model'] = args.eval_model
     if args.eval_model == "mlp":
         base_config['eval']['T']['normalization'] = "quantile"
+
         base_config['eval']['T']['cat_encoding'] = "one-hot"
 
     trial.set_user_attr("config", base_config)
@@ -103,7 +116,7 @@ def objective(trial):
 
     n_datasets = 5
     score = 0.0
-
+    sim_score = []
     for sample_seed in range(n_datasets):
         base_config['sample']['seed'] = sample_seed
         lib.dump_config(base_config, exps_path / 'config.toml')
@@ -112,13 +125,18 @@ def objective(trial):
 
         report_path = str(Path(base_config['parent_dir']) / f'results_{args.eval_model}.json')
         report = lib.load_json(report_path)
-
+        sim_path = str(Path(base_config['parent_dir']) / f'results_similarity.json')
+        sim_report = lib.load_json(sim_path)
+        sim_score.append(sim_report['sim_score'])
         if 'r2' in report['metrics']['val']:
             score += report['metrics']['val']['r2']
         else:
             score += report['metrics']['val']['macro avg']['f1-score']
 
     shutil.rmtree(exps_path / f"{trial.number}")
+        
+    for k, v in lib.average_per_key(sim_score).items():
+        run.log(k, v)
 
     print(f"Score calculated: {score / n_datasets}")
     return score / n_datasets
@@ -129,7 +147,12 @@ study = optuna.create_study(
 )
 
 print("---Starting optimizing Optune run---")
-study.optimize(objective, n_trials=50, show_progress_bar=True)
+n_trials=50
+if args.debug:
+    n_trials=5
+    print(f"DEBUG MODE IS ON: Only Running {n_trials} Optuna trials")
+    
+study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
 print("---Finished optimizing Optune run---")
 
 best_config_path = parent_path / f'{prefix}_best/config.toml'

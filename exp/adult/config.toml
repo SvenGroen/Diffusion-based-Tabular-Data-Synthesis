@@ -46,7 +46,7 @@ seed = 0
 
 [eval.type]
 eval_model = "catboost"
-eval_type = "real"
+eval_type = "synthetic"
 
 [eval.T]
 seed = 0

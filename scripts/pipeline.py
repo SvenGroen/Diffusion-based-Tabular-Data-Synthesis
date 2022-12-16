@@ -126,16 +126,16 @@ def main():
                 seed=raw_config['seed'],
                 change_val=args.change_val
             )
-    calculate_similarity_score(
-            parent_dir=raw_config['parent_dir'],
-            real_data_path=raw_config['real_data_path'],
-            eval_type=raw_config['eval']['type']['eval_type'],
-            num_classes=raw_config['model_params']['num_classes'],
-            is_y_cond=raw_config['model_params']['is_y_cond'],
-            T_dict=raw_config['eval']['T'],
-            seed=raw_config['seed'],
-            change_val=args.change_val
-        )
+        calculate_similarity_score(
+                parent_dir=raw_config['parent_dir'],
+                real_data_path=raw_config['real_data_path'],
+                eval_type=raw_config['eval']['type']['eval_type'],
+                num_classes=raw_config['model_params']['num_classes'],
+                is_y_cond=raw_config['model_params']['is_y_cond'],
+                T_dict=raw_config['eval']['T'],
+                seed=raw_config['seed'],
+                change_val=args.change_val
+            )
 
     print(f'Elapsed time: {str(timer)}')
 

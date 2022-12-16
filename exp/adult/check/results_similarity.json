@@ -1,0 +1,139 @@
+{
+    "eval_type": "synthetic",
+    "dataset": "data/adult/",
+    "sim_score": {
+        "score": 0.5391382308830766,
+        "basic_score": 0.6181397354838829,
+        "corr_score": 0.48947067628610086,
+        "ml_score": 0.890579349083813,
+        "sup_score": 0.697501393561586,
+        "pmse_score": 2.949668817005311e-206
+    },
+    "table_evaluator": {
+        "Overview Results": {
+            "Basic statistics": {
+                "result": 0.9312744671596346
+            },
+            "Correlation column correlations": {
+                "result": 0.10065978967677397
+            },
+            "Mean Correlation between fake and real columns": {
+                "result": 0.538092330534217
+            },
+            "1 - MAPE Estimator results": {
+                "result": 0.6002948356528575
+            },
+            "Similarity Score": {
+                "result": 0.5425803557558707
+            }
+        },
+        "Classifier F1-scores and their Jaccard similarities:": {
+            "DecisionTreeClassifier_fake": {
+                "f1_real": 0.545,
+                "f1_fake": 0.645,
+                "jaccard_similarity": 0.3568521031207598
+            },
+            "DecisionTreeClassifier_real": {
+                "f1_real": 0.7885,
+                "f1_fake": 0.4115,
+                "jaccard_similarity": 0.27877237851662406
+            },
+            "LogisticRegression_fake": {
+                "f1_real": 0.326,
+                "f1_fake": 0.7755,
+                "jaccard_similarity": 0.113895850737956
+            },
+            "LogisticRegression_real": {
+                "f1_real": 0.801,
+                "f1_fake": 0.7705,
+                "jaccard_similarity": 0.8107741059302852
+            },
+            "MLPClassifier_fake": {
+                "f1_real": 0.4595,
+                "f1_fake": 0.41,
+                "jaccard_similarity": 0.16177751960499565
+            },
+            "MLPClassifier_real": {
+                "f1_real": 0.8000000000000002,
+                "f1_fake": 0.2295,
+                "jaccard_similarity": 0.05346326046879115
+            },
+            "RandomForestClassifier_fake": {
+                "f1_real": 0.6625,
+                "f1_fake": 0.7425,
+                "jaccard_similarity": 0.6103059581320451
+            },
+            "RandomForestClassifier_real": {
+                "f1_real": 0.845,
+                "f1_fake": 0.695,
+                "jaccard_similarity": 0.564945226917058
+            }
+        },
+        "Privacy Results": {
+            "Duplicate rows between sets (real/fake)": {
+                "result": [
+                    2,
+                    781
+                ]
+            },
+            "nearest neighbor mean": {
+                "result": 3.202093968901244
+            },
+            "nearest neighbor std": {
+                "result": 0.42236106357124353
+            }
+        },
+        "Jensen-Shannon distance": {
+            "age": {
+                "js_distance": 0.8289718765821077
+            },
+            "fnlwgt": {
+                "js_distance": 0.47567608659512584
+            },
+            "education-num": {
+                "js_distance": 0.46710905649110585
+            },
+            "capital-gain": {
+                "js_distance": 0.26372391188851696
+            },
+            "capital-loss": {
+                "js_distance": 0.25491754886242923
+            },
+            "hours-per-week": {
+                "js_distance": 0.485987409480849
+            }
+        },
+        "Kolmogorov-Smirnov statistic": {
+            "age": {
+                "statistic": 0.9986,
+                "p-value": 0.0,
+                "equality": "different"
+            },
+            "fnlwgt": {
+                "statistic": 0.5894,
+                "p-value": 0.0,
+                "equality": "different"
+            },
+            "education-num": {
+                "statistic": 0.4501,
+                "p-value": 0.0,
+                "equality": "different"
+            },
+            "capital-gain": {
+                "statistic": 0.268,
+                "p-value": 3.49917745e-316,
+                "equality": "different"
+            },
+            "capital-loss": {
+                "statistic": 0.1781,
+                "p-value": 6.514021286355296e-139,
+                "equality": "different"
+            },
+            "hours-per-week": {
+                "statistic": 0.255,
+                "p-value": 5.924320073564327e-286,
+                "equality": "different"
+            }
+        }
+    }
+}
