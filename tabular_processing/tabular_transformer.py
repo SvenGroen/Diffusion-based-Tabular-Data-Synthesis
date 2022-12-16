@@ -33,6 +33,7 @@ class TabularTransformer:
         self.load_data(splits=splits)
         self.processor_type = processor_type if processor_type is not None else "identity"
         self.processor = self._get_processor_instance()
+        self.cat_values = self._get_all_category_values()
     
     def _get_processor_instance(self):
         if self.processor_type not in SUPPORTED_PROCESSORS:
@@ -42,15 +43,23 @@ class TabularTransformer:
         return SUPPORTED_PROCESSORS[self.processor_type](x_cat, x_num, y, **params)
 
     def _get_concat_splits(self, splits:list[str] = ["train","val"]) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        x_cat, x_num, y =  np.array([]), np.array([]), np.array([])
+        x_cat, x_num, y =  None, None, None
         for split in splits:
-            x_cat = np.concatenate([x_cat, self.x_cat[split]]) if x_cat.size else self.x_cat[split]
-            x_num = np.concatenate([x_num, self.x_num[split]]) if x_num.size else self.x_num[split]
-            y = np.concatenate([y, self.y[split]]) if y.size else self.y[split] # maybe expand_dims?
+            x_cat = np.concatenate([x_cat, self.x_cat[split]]) if x_cat is not None else self.x_cat[split]
+            x_num = np.concatenate([x_num, self.x_num[split]]) if x_num is not None else self.x_num[split]
+            y = np.concatenate([y, self.y[split]]) if y is not None else self.y[split] # maybe expand_dims?
         return x_cat, x_num, y
 
+    def _get_all_category_values(self):
+        all = self.to_pd_DataFrame(splits=["train","val","test"])
+        # all_col = all[self.config["dataset_config"]["cat_columns"]] # subset where only categorical columns are present
+        all_cat_values = {}
+        for col in self.config["dataset_config"]["cat_columns"]:
+            all_cat_values[col] = all[col].unique()
+        return all_cat_values
+
     def fit(self):
-        self.processor.fit()
+        self.processor.fit(meta_data=self.cat_values)
         pass
 
     def fit_transform(self):
@@ -72,18 +81,20 @@ class TabularTransformer:
         return df
 
     def transform(self):
-        self.processor.fit()
-        x_cat, x_num, y = self._get_concat_splits(splits=["train"]) # TODO: Check if no need to transform test and val
-        # train_len = self.x_cat["train"].shape[0]
-        # val_len = self.x_cat["val"].shape[0]
-        x_cat, x_num, y = self.processor.transform(x_cat, x_num, y)
-        # set transformed data
-        # self.x_cat["train"], self.x_cat["val"] = x_cat[:train_len], x_cat[train_len:train_len+val_len]
-        # self.x_num["train"], self.x_num["val"] = x_num[:train_len], x_num[train_len:train_len+val_len]
-        # self.y["train"], self.y["val"] = y[:train_len], y[train_len:train_len+val_len]
-        self.x_cat["train"] = x_cat
-        self.x_num["train"] = x_num
-        self.y["train"] = y
+        self.processor.fit(meta_data=self.cat_values)
+        splits = ["train","val"]
+        for split in splits:
+            x_cat, x_num, y = self._get_concat_splits(splits=[split]) # TODO: Check if no need to transform test and val
+            # train_len = self.x_cat["train"].shape[0]
+            # val_len = self.x_cat["val"].shape[0]
+            x_cat, x_num, y = self.processor.transform(x_cat, x_num, y)
+            # set transformed data
+            # self.x_cat["train"], self.x_cat["val"] = x_cat[:train_len], x_cat[train_len:train_len+val_len]
+            # self.x_num["train"], self.x_num["val"] = x_num[:train_len], x_num[train_len:train_len+val_len]
+            # self.y["train"], self.y["val"] = y[:train_len], y[train_len:train_len+val_len]
+            self.x_cat[split] = x_cat
+            self.x_num[split] = x_num
+            self.y[split] = y
         pass  
 
     def inverse_transform(self, x_cat, x_num, y):
@@ -103,10 +114,7 @@ class TabularTransformer:
     def load_data(self, splits=["train", "val", "test"]):
         # load data from data_path
         # taken and extended from utils_train.py
-        all_splits = ["train", "val", "test"]
-        self.x_cat = {split: None for split in all_splits}
-        self.x_num = {split: None for split in all_splits}
-        self.y = {split: None for split in all_splits}
+        
         if self.num_classes > 0:
             for split in splits:
                 X_num_t, X_cat_t, y_t = lib.read_pure_data(self.data_path, split)
@@ -128,6 +136,14 @@ class TabularTransformer:
                 if self.x_cat is not None:
                     self.x_cat[split] = x_cat_t
                 self.y[split] = y_t
+
+        # remaining splits are empty 
+        all_splits = ["train", "val", "test"]
+        remain = [split for split in all_splits if split not in splits]
+        for split in remain:
+            self.x_cat[split] = np.empty_like(self.x_cat[splits[-1]])
+            self.x_num[split] = np.empty_like(self.x_num[splits[-1]])
+            self.y[split] = np.empty_like(self.y[splits[-1]])
 
 
     def save_data(self):

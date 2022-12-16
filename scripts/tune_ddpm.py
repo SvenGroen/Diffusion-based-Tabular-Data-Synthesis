@@ -120,9 +120,10 @@ def objective(trial):
     for sample_seed in range(n_datasets):
         base_config['sample']['seed'] = sample_seed
         lib.dump_config(base_config, exps_path / 'config.toml')
-        
-        subprocess.run([sys.executable, f'{pipeline}', '--config', f'{exps_path / "config.toml"}', '--sample', '--eval', '--change_val'], check=True,  env=my_env)
-
+        try:
+            subprocess.run([sys.executable, f'{pipeline}', '--config', f'{exps_path / "config.toml"}', '--sample', '--eval', '--change_val'], check=True,  env=my_env)
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
         report_path = str(Path(base_config['parent_dir']) / f'results_{args.eval_model}.json')
         report = lib.load_json(report_path)
         sim_path = str(Path(base_config['parent_dir']) / f'results_similarity.json')
@@ -149,7 +150,7 @@ study = optuna.create_study(
 print("---Starting optimizing Optune run---")
 n_trials=50
 if args.debug:
-    n_trials=5
+    n_trials=2
     print(f"DEBUG MODE IS ON: Only Running {n_trials} Optuna trials")
     
 study.optimize(objective, n_trials=n_trials, show_progress_bar=True)

@@ -19,7 +19,25 @@
                 "tab-ddpm\\data\\adult-bgm",
                 "bgm"
             ]
-        }       
+        },
+        {
+            "name": "ERROR Pipeline",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env" : {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args":[
+                "--config", 
+                "exp\\adult\\many-exps\\config.toml", 
+                "--sample", 
+                "--eval", 
+                "--change_val"
+            ]
+        }        
         ,{
             "name": "tune_eval_model",
             "type": "python",
@@ -71,7 +89,8 @@
                 "synthetic",
                 "catboost",
                 "dppm_test_1",
-                "--eval_seeds"
+                "--eval_seeds",
+                "--debug"
             ]
         },
         {

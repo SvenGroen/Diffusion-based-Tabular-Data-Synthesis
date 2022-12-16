@@ -34,6 +34,7 @@ class BGMProcessor(TabularProcessor):
         self.target_column = target_column
         self.data_prep = None
         self.data_transformer = None
+        self.cat_values = None
         self.y_num_classes = 2 if problem_type == TaskType.BINCLASS else len(self.y.unique()) if problem_type == TaskType.MULTICLASS else 1 # 1 for regression
 
     def splitted_to_dataframe(self, x_cat, x_num, y):
@@ -53,7 +54,8 @@ class BGMProcessor(TabularProcessor):
         y = data[self.target_column].to_numpy()
         return x_cat, x_num, y
 
-    def fit(self):
+    def fit(self, meta_data=None):
+        self.cat_values = meta_data
         data = self.splitted_to_dataframe(self.x_cat, self.x_num, self.y)
         self.data_prep = DataPrep(categorical=self.cat_columns,
                                 log=self.log_columns,
@@ -61,7 +63,7 @@ class BGMProcessor(TabularProcessor):
                                 general=self.general_columns,
                                 non_categorical=self.non_cat_columns,
                                 integer=self.int_columns)
-        df = self.data_prep.prep(raw_df=data)
+        df = self.data_prep.prep(raw_df=data, cat_values=meta_data)
         self.data_transformer = DataTransformer(train_data=df.loc[:, df.columns != self.target_column],
                                         categorical_list=self.data_prep.column_types["categorical"],
                                         mixed_dict=self.data_prep.column_types["mixed"],
@@ -75,7 +77,7 @@ class BGMProcessor(TabularProcessor):
     def transform(self, x_cat : np.ndarray, x_num : np.ndarray, y : np.ndarray):
         assert self.data_prep is not None, "You must fit the transformer first"
         data = self.splitted_to_dataframe(x_cat, x_num, y)
-        data = self.data_prep.prep(raw_df=data)
+        data = self.data_prep.prep(raw_df=data, cat_values=self.cat_values)
         self.y = data.pop(self.target_column).to_numpy()
         data = self.data_transformer.transform(data.values)
         self.x_cat, self.x_num = self.split_cat_num(data=data)

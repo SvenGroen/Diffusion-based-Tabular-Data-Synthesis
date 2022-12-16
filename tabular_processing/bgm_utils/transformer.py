@@ -249,9 +249,18 @@ class DataTransformer:
                 if -9999999 in info["modal"]:
                     mode_vals.append(0)
 
+                # ADDED --> calc filter array everytime new so transform works also for not fitted data
+                _filter_arr = []
+                for element in current:
+                    if element not in info['modal']:
+                        _filter_arr.append(True)
+                    else:
+                        _filter_arr.append(False)
+                # ADDED END
+
                 current = current.reshape([-1, 1])
                 filter_arr = self.filter_arr[mixed_counter]
-                current = current[filter_arr]
+                current = current[_filter_arr] # CHANGED filter_arr to _filter_arr
 
                 means = self.model[id_][1].means_.reshape((1, self.n_clusters))
                 stds = np.sqrt(self.model[id_][1].covariances_).reshape((1, self.n_clusters))

@@ -168,7 +168,8 @@ def tabsyndex(real_data, fake_data, cat_cols, target_col=-1, target_type='regr')
     return score
 
   def pmse():
-    data = real_data_norm.append(fake_data_norm, ignore_index=True)
+    # data = real_data_norm.append(fake_data_norm, ignore_index=True)
+    data = pd.concat([real_data_norm, fake_data_norm], ignore_index=True)
     data['target'] = [0]*len(real_data)+[1]*len(fake_data)
     data = data.sample(frac=1)
     x = data.drop('target', axis=1)

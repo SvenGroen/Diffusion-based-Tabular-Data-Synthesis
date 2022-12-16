@@ -18,7 +18,7 @@ class DataPrep(object):
         super().__init__()
         
 
-    def prep(self, raw_df: pd.DataFrame):
+    def prep(self, raw_df: pd.DataFrame, cat_values=None):
         self.column_types = dict()
         self.column_types["categorical"] = []
         self.column_types["mixed"] = {}
@@ -29,6 +29,7 @@ class DataPrep(object):
         self.df = raw_df
         self.df = self.df.replace(r' ', np.nan)
         self.df = self.df.fillna('empty')
+        self.cat_values = cat_values
         all_columns = set(self.df.columns)
         irrelevant_missing_columns = set(self.categorical_columns)
         relevant_missing_columns = list(all_columns - irrelevant_missing_columns)
@@ -67,9 +68,10 @@ class DataPrep(object):
 
         for column_index, column in enumerate(self.df.columns):
             if column in self.categorical_columns:
-                label_encoder = preprocessing.LabelEncoder()
+                label_encoder = preprocessing.LabelEncoder() # TODO: Replace with OrdinalEncoder that handles unknown values
                 self.df[column] = self.df[column].astype(str)
-                label_encoder.fit(self.df[column])
+                fit_on = self.df[column] if cat_values is None else cat_values[column]
+                label_encoder.fit(fit_on.astype(str))
                 current_label_encoder = dict()
                 current_label_encoder['column'] = column
                 current_label_encoder['label_encoder'] = label_encoder

@@ -29,7 +29,7 @@ class TabularProcessor(ABC):
         pass
 
     @abstractmethod
-    def fit(self, data: np.ndarray) -> None:
+    def fit(self, meta_data:dict) -> None:
         pass
 
     @staticmethod
