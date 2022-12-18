@@ -1,4 +1,4 @@
-parent_dir = "exp\\adult\\many-exps\\1"
+parent_dir = "exp\\adult\\dppm_test_2_best"
 real_data_path = "data/adult/"
 num_numerical_features = 6
 model_type = "mlp"

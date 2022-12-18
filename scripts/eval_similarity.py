@@ -1,6 +1,9 @@
 from catboost import CatBoostClassifier, CatBoostRegressor
 from sklearn.metrics import classification_report, r2_score
 import numpy as np
+import seaborn as sns
+import pandas as pd
+import matplotlib.pyplot as plt
 import os
 from sklearn.utils import shuffle
 import zero
@@ -21,7 +24,8 @@ def calculate_similarity_score(
     seed = 0,
     num_classes = 2,
     is_y_cond = False,
-    change_val = True
+    change_val = True,
+    table_evaluate = True
     ):
 
     zero.improve_reproducibility(seed)
@@ -106,17 +110,35 @@ def calculate_similarity_score(
         df_test.to_csv(os.path.join(parent_dir, f"test_{eval_type}.csv"), index=False)
 
         # Plotting
+    if table_evaluate:
         try:
-            from table_evaluator import TableEvaluator
+            from tabsyndex.table_evaluator_fix import TableEvaluatorFix as TableEvaluator
+            target_col=train_transform.config["dataset_config"]["target_column"]
+            cat_col = train_transform.config["dataset_config"]["cat_columns"]
+            num_col = train_transform.config["dataset_config"]["int_columns"]
+            if target_col in cat_col:
+                df_test[target_col] = df_test[target_col].astype(str)
+                df_train[target_col] = df_train[target_col].astype(str)
+            elif target_col in num_col:
+                df_test[target_col] = df_test[target_col].astype(float)
+                df_train[target_col] = df_train[target_col].astype(float)
+
             te = TableEvaluator(df_test, df_train, cat_cols=train_transform.config["dataset_config"]["cat_columns"])
             save_dir = os.path.join(parent_dir, "plots")
             te.visual_evaluation(save_dir=save_dir)
+            # te.plot_mean_std(fname=save_dir/'mean_std.png')
+            # te.plot_cumsums(fname=save_dir/'cumsums.png')
+            # te.plot_distributions(fname=save_dir/'distributions.png')
+            # te.plot_correlation_difference()
+            # plot_correlation_difference(real = df_test, fake=df_train, cat_cols=train_transform.config["dataset_config"]["cat_columns"], plot_diff=True, fname=save_dir/'correlation_difference.png')
+            # te.plot_pca(fname=save_dir/'pca.png') 
             output = te.evaluate(return_outputs=True,verbose=True, target_col = train_transform.config["dataset_config"]["target_column"])
             print(output)
 
             report['table_evaluator'] = output
-        except:
+        except Exception as e:
             print("TableEvaluator failed")
+            print(e)
 
     if parent_dir is not None:
         lib.dump_json(report, os.path.join(parent_dir, "results_similarity.json"))
@@ -131,3 +153,92 @@ def _equal_length(df1, df2):
     else:
         df2 = df2.sample(n=len1)
     return df1, df2
+
+def plot_correlation_difference(real: pd.DataFrame, fake: pd.DataFrame, plot_diff: bool = True, cat_cols: list = None, annot=False, fname=None):
+    """
+
+    TAKEN FROM TABLE EVALUATOR BUT REPLACING THE ASSOCIATE FUNCTION
+
+    Plot the association matrices for the `real` dataframe, `fake` dataframe and plot the difference between them. Has support for continuous and Categorical
+    (Male, Female) data types. All Object and Category dtypes are considered to be Categorical columns if `dis_cols` is not passed.
+
+    - Continuous - Continuous: Uses Pearson's correlation coefficient
+    - Continuous - Categorical: Uses so called correlation ratio (https://en.wikipedia.org/wiki/Correlation_ratio) for both continuous - categorical and categorical - continuous.
+    - Categorical - Categorical: Uses Theil's U, an asymmetric correlation metric for Categorical associations
+
+    :param real: DataFrame with real data
+    :param fake: DataFrame with synthetic data
+    :param plot_diff: Plot difference if True, else not
+    :param cat_cols: List of Categorical columns
+    :param boolean annot: Whether to annotate the plot with numbers indicating the associations.
+    """
+
+
+    assert isinstance(real, pd.DataFrame), f'`real` parameters must be a Pandas DataFrame'
+    assert isinstance(fake, pd.DataFrame), f'`fake` parameters must be a Pandas DataFrame'
+    cmap = sns.diverging_palette(220, 10, as_cmap=True)
+
+    if cat_cols is None:
+        cat_cols = real.select_dtypes(['object', 'category'])
+    if plot_diff:
+        fig, ax = plt.subplots(1, 3, figsize=(24, 7))
+    else:
+        fig, ax = plt.subplots(1, 2, figsize=(20, 8))
+
+    real_corr = calculate_correlation_map(real)
+    fake_corr = calculate_correlation_map(fake)
+
+    if plot_diff:
+        diff = abs(real_corr - fake_corr)
+        sns.set(style="white")
+        sns.heatmap(diff, ax=ax[2], cmap=cmap, vmax=.3, square=True, annot=annot, center=0,
+                    linewidths=.5, cbar_kws={"shrink": .5}, fmt='.2f')
+
+    titles = ['Real', 'Fake', 'Difference'] if plot_diff else ['Real', 'Fake']
+    for i, label in enumerate(titles):
+        title_font = {'size': '18'}
+        ax[i].set_title(label, **title_font)
+    plt.tight_layout()
+
+    if fname is not None: 
+        plt.savefig(fname)
+
+    plt.show()
+
+def calculate_correlation_map(df):
+    # Create an empty correlation matrix
+    from scipy.stats import pearsonr, spearmanr
+    corr_matrix = pd.DataFrame(columns=df.columns, index=df.columns)
+    
+    # Iterate over the columns in the DataFrame
+    for col1 in df.columns:
+        for col2 in df.columns:
+            # Skip self-correlations
+            if col1 == col2:
+                continue
+                
+            # Check the data types of the columns
+            dtype1 = df[col1].dtype
+            dtype2 = df[col2].dtype
+            
+            # Continuous - Continuous: Use Pearson's correlation coefficient
+            if dtype1 == 'float' and dtype2 == 'float':
+                corr, _ = pearsonr(df[col1], df[col2])
+                corr_matrix.loc[col1, col2] = corr
+                
+            # Continuous - Categorical: Use correlation ratio
+            elif dtype1 == 'float' and dtype2 == 'object':
+                corr = df[col1].corr(df[col2], method='spearman')
+                corr_matrix.loc[col1, col2] = corr
+                
+            # Categorical - Continuous: Use correlation ratio
+            elif dtype1 == 'object' and dtype2 == 'float':
+                corr = df[col2].corr(df[col1], method='spearman')
+                corr_matrix.loc[col1, col2] = corr
+                
+            # Categorical - Categorical: Use Theil's U
+            elif dtype1 == 'object' and dtype2 == 'object':
+                corr = df[col1].corr(df[col2], method='theil_u')
+                corr_matrix.loc[col1, col2] = corr
+                
+    return corr_matrix

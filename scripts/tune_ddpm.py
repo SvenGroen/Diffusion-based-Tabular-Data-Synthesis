@@ -166,9 +166,10 @@ best_config["parent_dir"] = str(parent_path / f'{prefix}_best/')
 os.makedirs(parent_path / f'{prefix}_best', exist_ok=True)
 lib.dump_config(best_config, best_config_path)
 lib.dump_json(optuna.importance.get_param_importances(study), parent_path / f'{prefix}_best/importance.json')
-
-subprocess.run([sys.executable, f'{pipeline}', '--config', f'{best_config_path}', '--train', '--sample'], check=True, env=my_env)
-
+try:
+    subprocess.run([sys.executable, f'{pipeline}', '--config', f'{best_config_path}', '--train', '--sample'], check=True, env=my_env)
+except subprocess.CalledProcessError as e:
+    raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
 # Added------------
 # if not os.path.isdir('outputs'):
 #     os.mkdir('outputs')
@@ -185,5 +186,8 @@ subprocess.run([sys.executable, f'{pipeline}', '--config', f'{best_config_path}'
 if args.eval_seeds:
     best_exp = str(parent_path / f'{prefix}_best/config.toml')
     print("---Starting eval_seeds.py---")
-    subprocess.run([sys.executable, f'{eval_seeds}', '--config', f'{best_exp}', '10', "ddpm", eval_type, args.eval_model, '5'], check=True, env=my_env)
+    try:
+        subprocess.run([sys.executable, f'{eval_seeds}', '--config', f'{best_exp}', '10', "ddpm", eval_type, args.eval_model, '5'], check=True, env=my_env)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
     print("---Finished eval_seeds.py---")

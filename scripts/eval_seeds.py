@@ -10,6 +10,8 @@ from copy import deepcopy
 from scripts.eval_catboost import train_catboost
 from scripts.eval_mlp import train_mlp
 from scripts.eval_simple import train_simple
+from scripts.eval_similarity import calculate_similarity_score
+from azureml.core import Run
 
 pipeline = {
     'ddpm': 'scripts/pipeline.py',
@@ -32,12 +34,15 @@ def eval_seeds(
     dump=True,
     change_val=False
 ):
-
+    run = Run.get_context()
     metrics_seeds_report = lib.SeedsMetricsReport()
     parent_dir = Path(raw_config["parent_dir"])
+    final_eval_dir = parent_dir / "final_eval"
+    final_eval_dir.mkdir(exist_ok=True, parents=True)
 
     if eval_type == 'real':
         n_datasets = 1
+
 
     temp_config = deepcopy(raw_config)
     with tempfile.TemporaryDirectory() as dir_:
@@ -58,6 +63,8 @@ def eval_seeds(
                 subprocess.run([sys.executable, f'{pipeline[sampling_method]}', '--config', f'{str(dir_ / "config.toml")}', '--sample'], check=True, env=my_env)
                 print(f"---Finished SAMPLING {sample_seed}---")
             T_dict = deepcopy(raw_config['eval']['T'])
+            sim_reports = []
+            best_sim_score = 0
             for seed in range(n_seeds):
                 print(f'\n**Eval Iter: {sample_seed*n_seeds + (seed + 1)}/{n_seeds * n_datasets}**')
                 print(f"Model_type: {model_type}")
@@ -83,20 +90,45 @@ def eval_seeds(
                         seed=seed,
                         change_val=change_val
                     )
+                print("calculating similarity score")
+                similarity_score = calculate_similarity_score(
+                    parent_dir=temp_config['parent_dir'],
+                    real_data_path=temp_config['real_data_path'],
+                    eval_type=eval_type,
+                    T_dict=T_dict,
+                    seed=seed,
+                    num_classes=raw_config['model_params']['num_classes'],
+                    is_y_cond=raw_config['model_params']['is_y_cond'],
+                    change_val=change_val,
+                    table_evaluate=True # only table eval for 1 seed
+                )
+                if similarity_score["sim_score"]["score"] > best_sim_score:
+                    best_sim_score = similarity_score["sim_score"]["score"]
+                    # copy content to final_eval_dir
+                    if dump:
+                        # copy content with sub folders to final_eval_dir
+                        for file in os.listdir(temp_config['parent_dir']):
+                            origin = os.path.join(temp_config['parent_dir'], file)
+                            source = os.path.join(final_eval_dir, file)
+                            copy_file_or_tree(origin, source)
+
+                sim_reports.append(similarity_score["sim_score"])              
                 print("**Finished Evaluation Iteration**\n")
                 metrics_seeds_report.add_report(metric_report)
-
-    metrics_seeds_report.get_mean_std()
     print("Final result: ")
+    for k, v in lib.average_per_key(sim_reports).items():
+        run.log("final_"+str(k), v)
+        print(f"final_{k}: {v}")
+    metrics_seeds_report.get_mean_std()
     res = metrics_seeds_report.print_result()
-    if os.path.exists(parent_dir/ f"eval_{model_type}.json"):
-        eval_dict = lib.load_json(parent_dir / f"eval_{model_type}.json")
+    if os.path.exists(final_eval_dir/ f"eval_{model_type}.json"):
+        eval_dict = lib.load_json(final_eval_dir / f"eval_{model_type}.json")
         eval_dict = eval_dict | {eval_type: res}
     else:
         eval_dict = {eval_type: res}
     
     if dump:
-        lib.dump_json(eval_dict, parent_dir / f"eval_{model_type}.json")
+        lib.dump_json(eval_dict, final_eval_dir / f"eval_{model_type}.json")
 
     raw_config['sample']['seed'] = 0
     lib.dump_config(raw_config, parent_dir / 'config.toml')
@@ -123,6 +155,16 @@ def main():
         n_datasets=args.n_datasets,
         dump=args.no_dump
     )
+
+def copy_file_or_tree(origin, source):
+    if not os.path.isdir(origin):
+        if os.path.exists(source):
+            os.remove(source)
+        shutil.copy2(origin, source)
+    else:
+        if os.path.exists(source):
+            shutil.rmtree(source)
+        shutil.copytree(origin, source)
 
 if __name__ == '__main__':
     main()

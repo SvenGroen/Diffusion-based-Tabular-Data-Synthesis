@@ -134,7 +134,8 @@ def main():
                 is_y_cond=raw_config['model_params']['is_y_cond'],
                 T_dict=raw_config['eval']['T'],
                 seed=raw_config['seed'],
-                change_val=args.change_val
+                change_val=args.change_val,
+                table_evaluate=True
             )
 
     print(f'Elapsed time: {str(timer)}')

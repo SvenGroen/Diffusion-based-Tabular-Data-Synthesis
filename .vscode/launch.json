@@ -88,7 +88,7 @@
                 "10",
                 "synthetic",
                 "catboost",
-                "dppm_test_1",
+                "dppm_test_2",
                 "--eval_seeds",
                 "--debug"
             ]
@@ -99,14 +99,14 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
             "env" : {
                 "PYTHONPATH": "${workspaceFolder}"
             },
             "args":[
                 "--config",
-                "exp/adult/ddpm_cb_best/config.toml",
-                "5",
+                "${workspaceFolder}\\exp\\adult\\dppm_test_1_best\\config.toml",
+                "2",
                 "ddpm",
                 "synthetic",
                 "catboost",

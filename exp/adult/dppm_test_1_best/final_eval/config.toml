@@ -1,4 +1,4 @@
-parent_dir = "exp\\adult\\dppm_test_1_best"
+parent_dir = "C:\\Users\\SvenG\\AppData\\Local\\Temp\\tmpqjrucbxf"
 real_data_path = "data/adult/"
 num_numerical_features = 6
 model_type = "mlp"
@@ -42,7 +42,7 @@ type = "bgm"
 [sample]
 num_samples = 2
 batch_size = 10000
-seed = 0
+seed = 4
 
 [eval.type]
 eval_model = "catboost"
