@@ -135,7 +135,7 @@ def main():
                 T_dict=raw_config['eval']['T'],
                 seed=raw_config['seed'],
                 change_val=args.change_val,
-                table_evaluate=True
+                table_evaluate=not args.change_val # do not evaluate during the tuning process
             )
 
     print(f'Elapsed time: {str(timer)}')

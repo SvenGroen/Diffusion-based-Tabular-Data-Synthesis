@@ -18,12 +18,12 @@ class IdentityProcessor(TabularProcessor):
         # No inverse transform is needed for the identity processor, so this method
         return x_cat, x_num, y_pred
 
-    def fit_transform(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def fit_transform(self, *args, **kwargs) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         # No fitting is needed for the identity processor, so this method
         # is a no-op.
         return self.transform(self.x_cat, self.x_num, self.y)
 
-    def fit(self) -> None:
+    def fit(self, *args, **kwargs) -> None:
         # No fitting is needed for the identity processor, so this method
         # is a no-op.
         return self
