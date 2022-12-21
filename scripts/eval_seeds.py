@@ -37,8 +37,12 @@ def eval_seeds(
     run = Run.get_context()
     metrics_seeds_report = lib.SeedsMetricsReport()
     parent_dir = Path(raw_config["parent_dir"])
-    final_eval_dir = parent_dir / "final_eval"
+    if not "outputs" in str(parent_dir):
+        final_eval_dir = Path("outputs") / parent_dir / "final_eval"
+    else:
+        final_eval_dir = parent_dir / "final_eval"
     final_eval_dir.mkdir(exist_ok=True, parents=True)
+    print("Final Evaluation directory located at: ", str(final_eval_dir))
 
     if eval_type == 'real':
         n_datasets = 1
@@ -100,7 +104,7 @@ def eval_seeds(
                     num_classes=raw_config['model_params']['num_classes'],
                     is_y_cond=raw_config['model_params']['is_y_cond'],
                     change_val=change_val,
-                    table_evaluate=True # only table eval for 1 seed
+                    table_evaluate=True 
                 )
                 if similarity_score["sim_score"]["score"] > best_sim_score:
                     best_sim_score = similarity_score["sim_score"]["score"]

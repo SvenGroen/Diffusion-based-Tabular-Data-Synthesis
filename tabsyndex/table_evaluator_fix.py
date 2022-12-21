@@ -3,6 +3,7 @@ from table_evaluator import TableEvaluator
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 from dython.nominal import compute_associations
 
 class TableEvaluatorFix(TableEvaluator):

@@ -8,6 +8,7 @@ import shutil
 import argparse
 from pathlib import Path
 from azureml.core import Run
+import pprint
 
 parser = argparse.ArgumentParser()
 parser.add_argument('ds_name', type=str)
@@ -26,12 +27,11 @@ ds_name = args.ds_name
 eval_type = args.eval_type 
 assert eval_type in ('merged', 'synthetic')
 prefix = str(args.prefix)
-
 pipeline = f'scripts/pipeline.py'
 base_config_path = f'exp/{ds_name}/config.toml'
 parent_path = Path(f'exp/{ds_name}/')
 exps_path = Path(f'exp/{ds_name}/many-exps/') # temporary dir. maybe will be replaced with tempdiвdr
-if lib.util.RUNS_IN_CLOUD and not "outputs" in parent_path:
+if lib.util.RUNS_IN_CLOUD and not "outputs" in str(parent_path):
     parent_path = 'outputs' / parent_path
     exps_path = 'outputs' / exps_path
 eval_seeds = f'scripts/eval_seeds.py'
@@ -41,6 +41,8 @@ my_env["PYTHONPATH"] = os.getcwd() # Needed to run the subscripts
 
 os.makedirs(exps_path, exist_ok=True)
 
+print("parent_path: ", parent_path)
+print("exps_path: ", exps_path)
 
 
 def _suggest_mlp_layers(trial):
@@ -73,6 +75,8 @@ def objective(trial):
     num_samples = int(train_size * (2 ** trial.suggest_int('num_samples', -2, 1)))
 
     base_config = lib.load_config(base_config_path)
+    print("BASE CONFIG: ")
+    pprint.pprint(base_config, width=-1)
 
     base_config['train']['main']['lr'] = lr
     base_config['train']['main']['steps'] = steps
@@ -150,7 +154,7 @@ study = optuna.create_study(
 print("---Starting optimizing Optune run---")
 n_trials=50
 if args.debug:
-    n_trials=2
+    n_trials=5
     print(f"DEBUG MODE IS ON: Only Running {n_trials} Optuna trials")
     
 study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
@@ -159,6 +163,7 @@ print("---Finished optimizing Optune run---")
 best_config_path = parent_path / f'{prefix}_best/config.toml'
 best_config = study.best_trial.user_attrs['config']
 
+print("best_config_path: ", best_config_path)
 print("Best config found with: ")
 print(best_config)
 best_config["parent_dir"] = str(parent_path / f'{prefix}_best/')
@@ -187,7 +192,8 @@ if args.eval_seeds:
     best_exp = str(parent_path / f'{prefix}_best/config.toml')
     print("---Starting eval_seeds.py---")
     try:
-        subprocess.run([sys.executable, f'{eval_seeds}', '--config', f'{best_exp}', '10', "ddpm", eval_type, args.eval_model, '5'], check=True, env=my_env)
+        sample_runs = 10 if not args.debug else 2
+        subprocess.run([sys.executable, f'{eval_seeds}', '--config', f'{best_exp}', f'{sample_runs}', "ddpm", eval_type, args.eval_model, '5'], check=True, env=my_env)
     except subprocess.CalledProcessError as e:
         raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
     print("---Finished eval_seeds.py---")

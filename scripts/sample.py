@@ -190,6 +190,7 @@ def sample(
     # + check if cat values are strings of floats and if nums are still normalized
 
     # Save for Evaluation
+    print("Saving Synthetic Data at: ", str(parent_dir))
     if num_numerical_features != 0:
         print("Num shape: ", X_num.shape)
         np.save(os.path.join(parent_dir, 'X_num_train'), X_num)
