@@ -23,3 +23,4 @@ exps/
 *.yml
 *.amltmp
 *.amlignore
+secrets.json
