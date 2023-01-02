@@ -133,6 +133,61 @@
             ]
         },
         {
+            "name": "pipeline_ctabgan",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env" : {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args":[
+                "--config",
+                "${workspaceFolder}\\exp\\adult\\ctabgan\\config.toml",
+                "--train",
+                "--sample",
+                "--eval",
+                "--debug"
+            ]
+        },
+        {
+            "name": "pipeline_smote",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env" : {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args":[
+                "--config",
+                "${workspaceFolder}\\exp\\adult\\smote\\config.toml",
+                "--sample",
+                "--eval"
+            ]
+        },
+        {
+            "name": "pipeline_tvae",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env" : {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args":[
+                "--config",
+                "${workspaceFolder}\\exp\\adult\\tvae\\config.toml",
+                "--train",
+                "--sample",
+                "--eval",
+                "--debug"
+            ]
+        },
+        {
             "name": "Eval_seed_other_models",
             "type": "python",
             "request": "launch",
@@ -144,9 +199,9 @@
             },
             "args":[
                 "--config",
-                "${workspaceFolder}\\exp\\adult\\ctabgan-plus\\config.toml",
+                "${workspaceFolder}\\exp\\adult\\ctabgan\\config.toml",
                 "2",
-                "ctabgan-plus",
+                "ctabgan",
                 "synthetic",
                 "catboost",
                 "2",  

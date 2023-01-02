@@ -23,13 +23,15 @@ class CTABGAN():
                  problem_type= {"Classification": 'income'},
                  batch_size = 512,
                  class_dim = (256, 256, 256, 256),
+                 random_dim=128,
+                 num_channels=64,
                  lr = 2e-4,
                  epochs = 10,
                  device=None):
 
         self.__name__ = 'CTABGAN'
               
-        self.synthesizer = CTABGANSynthesizer(lr = lr, epochs = epochs, batch_size = batch_size, class_dim = class_dim, device = device)
+        self.synthesizer = CTABGANSynthesizer(lr = lr, epochs = epochs, batch_size = batch_size, class_dim = class_dim, device = device, random_dim=random_dim, num_channels=num_channels)
         self.raw_df = df
         print(self.raw_df.shape)
         self.test_ratio = test_ratio
