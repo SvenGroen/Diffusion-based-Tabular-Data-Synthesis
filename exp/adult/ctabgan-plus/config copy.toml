@@ -1,7 +1,7 @@
 parent_dir = "exp/adult/ctabgan-plus"
 real_data_path = "data/adult/"
 seed = 0
-device = "cuda"
+device = "cuda:0"
 
 [train_params]
 lr = 0.0002288113668475521

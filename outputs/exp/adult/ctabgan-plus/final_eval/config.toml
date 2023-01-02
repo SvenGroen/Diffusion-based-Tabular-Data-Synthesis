@@ -1,7 +1,7 @@
-parent_dir = "exp/adult/ctabgan-plus"
+parent_dir = "C:\\Users\\SvenG\\AppData\\Local\\Temp\\tmpznicg8oj"
 real_data_path = "data/adult/"
 seed = 0
-device = "cuda"
+device = "cpu"
 
 [train_params]
 lr = 0.0002288113668475521
@@ -16,7 +16,7 @@ random_dim = 32
 num_channels = 64
 
 [sample]
-seed = 0
+seed = 1
 num_samples = 54000
 
 [eval.type]

@@ -27,9 +27,13 @@ def main():
     parser.add_argument('--sample', action='store_true',  default=False)
     parser.add_argument('--eval', action='store_true',  default=False)
     parser.add_argument('--change_val', action='store_true',  default=False)
+    parser.add_argument('--debug', action='store_true',  default=False)
 
     args = parser.parse_args()
     raw_config = lib.load_config(args.config)
+    if args.debug:
+        raw_config["train_params"]["epochs"] = 1
+        raw_config["sample"]["num_samples"] = 100
     timer = zero.Timer()
     timer.run()
     save_file(os.path.join(raw_config['parent_dir'], 'config.toml'), args.config)

@@ -112,7 +112,46 @@
                 "catboost",
                 "5",  
             ]
-        }, 
+        },
+        {
+            "name": "pipeline_ctabplus",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env" : {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args":[
+                "--config",
+                "${workspaceFolder}\\exp\\adult\\ctabgan-plus\\config.toml",
+                "--train",
+                "--sample",
+                "--eval",
+                "--debug"
+            ]
+        },
+        {
+            "name": "Eval_seed_other_models",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env" : {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args":[
+                "--config",
+                "${workspaceFolder}\\exp\\adult\\ctabgan-plus\\config.toml",
+                "2",
+                "ctabgan-plus",
+                "synthetic",
+                "catboost",
+                "2",  
+            ]
+        },
         {
             "name": "Generic Python File",
             "type": "python",

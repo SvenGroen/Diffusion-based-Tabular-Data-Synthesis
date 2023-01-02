@@ -17,7 +17,7 @@ pipeline = {
     'ddpm': 'scripts/pipeline.py',
     'smote': 'smote/pipeline_smote.py',
     'ctabgan': 'CTAB-GAN/pipeline_ctabgan.py',
-    'ctabgan-plus': 'CTAB-GAN-Plus/pipeline_ctabgan.py',
+    'ctabgan-plus': 'CTAB-GAN-Plus/pipeline_ctabganp.py',
     'tvae': 'CTGAN/pipeline_tvae.py'
 }
 
@@ -44,6 +44,7 @@ def eval_seeds(
     final_eval_dir.mkdir(exist_ok=True, parents=True)
     print("Final Evaluation directory located at: ", str(final_eval_dir))
 
+    d_set_info = lib.load_json(parent_dir/"info.json")
     if eval_type == 'real':
         n_datasets = 1
 
@@ -95,16 +96,23 @@ def eval_seeds(
                         change_val=change_val
                     )
                 print("calculating similarity score")
+                try:
+                    num_classes = raw_config['model_params']['num_classes']
+                    y_cond = raw_config['model_params']['is_y_cond']
+                except KeyError:
+                    num_classes = get_num_classes(d_set_info["dataset_config"]["problem_type"])
+                    y_cond = True
+
                 similarity_score = calculate_similarity_score(
                     parent_dir=temp_config['parent_dir'],
                     real_data_path=temp_config['real_data_path'],
                     eval_type=eval_type,
                     T_dict=T_dict,
                     seed=seed,
-                    num_classes=raw_config['model_params']['num_classes'],
-                    is_y_cond=raw_config['model_params']['is_y_cond'],
+                    num_classes=num_classes,
+                    is_y_cond=y_cond,
                     change_val=change_val,
-                    table_evaluate=True 
+                    table_evaluate=False#True 
                 )
                 if similarity_score["sim_score"]["score"] > best_sim_score:
                     best_sim_score = similarity_score["sim_score"]["score"]
@@ -120,7 +128,8 @@ def eval_seeds(
                 print("**Finished Evaluation Iteration**\n")
                 metrics_seeds_report.add_report(metric_report)
     print("Final result: ")
-    for k, v in lib.average_per_key(sim_reports).items():
+    sim_reports = lib.average_per_key(sim_reports)
+    for k, v in sim_reports.items():
         run.log("final_"+str(k), v)
         print(f"final_{k}: {v}")
     metrics_seeds_report.get_mean_std()
@@ -132,6 +141,7 @@ def eval_seeds(
         eval_dict = {eval_type: res}
     
     if dump:
+        lib.dump_json(sim_reports, final_eval_dir / f"eval_similarity.json")
         lib.dump_json(eval_dict, final_eval_dir / f"eval_{model_type}.json")
 
     raw_config['sample']['seed'] = 0
@@ -169,6 +179,14 @@ def copy_file_or_tree(origin, source):
         if os.path.exists(source):
             shutil.rmtree(source)
         shutil.copytree(origin, source)
+
+def get_num_classes(problem_type):
+    if problem_type == "binclass":
+        return 2
+    elif problem_type == "regression":
+        return 0
+    else:
+        return 3
 
 if __name__ == '__main__':
     main()
