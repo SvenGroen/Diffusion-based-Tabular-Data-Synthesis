@@ -115,6 +115,7 @@ def calculate_similarity_score(
 
         # Plotting
     if table_evaluate:
+        print("Starting table Evaluator")
         try:
             from tabsyndex.table_evaluator_fix import TableEvaluatorFix as TableEvaluator
             target_col=train_transform.config["dataset_config"]["target_column"]
@@ -134,6 +135,7 @@ def calculate_similarity_score(
 
             te = TableEvaluator(df_test, df_train, cat_cols=train_transform.config["dataset_config"]["cat_columns"])
             save_dir = os.path.join(parent_dir, "plots")
+            print("Visual Eval")
             te.visual_evaluation(save_dir=save_dir)
             # te.plot_mean_std(fname=save_dir/'mean_std.png')
             # te.plot_cumsums(fname=save_dir/'cumsums.png')
@@ -141,6 +143,7 @@ def calculate_similarity_score(
             # te.plot_correlation_difference()
             # plot_correlation_difference(real = df_test, fake=df_train, cat_cols=train_transform.config["dataset_config"]["cat_columns"], plot_diff=True, fname=save_dir/'correlation_difference.png')
             # te.plot_pca(fname=save_dir/'pca.png') 
+            print("Multiple Eval")
             output = te.evaluate(return_outputs=True,verbose=True, target_col = train_transform.config["dataset_config"]["target_column"])
             print(output)
 
@@ -149,6 +152,7 @@ def calculate_similarity_score(
             import traceback
             print("TableEvaluator failed, error: ")
             print(traceback.format_exc())
+        print("Finished Table Evaluator")
 
     if parent_dir is not None:
         lib.dump_json(report, os.path.join(parent_dir, "results_similarity.json"))

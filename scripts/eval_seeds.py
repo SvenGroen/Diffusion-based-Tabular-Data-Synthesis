@@ -112,7 +112,7 @@ def eval_seeds(
                     num_classes=num_classes,
                     is_y_cond=y_cond,
                     change_val=change_val,
-                    table_evaluate=False#True 
+                    table_evaluate=True#True 
                 )
                 if similarity_score["sim_score"]["score"] > best_sim_score:
                     best_sim_score = similarity_score["sim_score"]["score"]

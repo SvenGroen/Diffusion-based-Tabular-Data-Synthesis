@@ -44,6 +44,9 @@ def train_tvae(
                 ) 
     
     synthesizer.fit(X, cat_features)
+    if not "outputs" in str(parent_dir):
+        parent_dir = Path("outputs") / parent_dir
+        parent_dir.mkdir(exist_ok=True, parents=True)
 
     # save_ctabgan(synthesizer, parent_dir)
     with open(parent_dir / "tvae.obj", "wb") as f:

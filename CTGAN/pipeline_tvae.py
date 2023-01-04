@@ -33,6 +33,7 @@ def main():
     if args.debug:
         raw_config["device"] = "cpu"
         raw_config["train_params"]["epochs"] = 2
+
     timer = zero.Timer()
     timer.run()
     save_file(os.path.join(raw_config['parent_dir'], 'config.toml'), args.config)

@@ -40,6 +40,9 @@ def train_ctabgan(
                 ) 
     
     synthesizer.fit()
+    if not "outputs" in str(parent_dir):
+        parent_dir = Path("outputs") / parent_dir
+        parent_dir.mkdir(exist_ok=True, parents=True)
 
     # save_ctabgan(synthesizer, parent_dir)
     with open(parent_dir / "ctabgan.obj", "wb") as f:
