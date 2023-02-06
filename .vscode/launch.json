@@ -68,7 +68,7 @@
             "args":[
                 "--config",
                 "${workspaceFolder}\\exp\\adult\\config.toml",
-                // "--train",
+                "--train",
                 // "--sample",
                 // "--eval"
             ]
