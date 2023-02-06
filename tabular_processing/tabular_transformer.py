@@ -5,6 +5,7 @@ from .dataset import TaskType, _apply_split, _make_split, _save
 from .tabular_processor import TabularProcessor
 from .bgm_processor import BGMProcessor
 from .identity_processor import IdentityProcessor
+from .ft_processor import FTProcessor
 from pathlib import Path
 from typing import Tuple, Union
 from enum import Enum
@@ -19,7 +20,9 @@ def concat_y_to_X(X, y):
 
 SUPPORTED_PROCESSORS = {
     "identity": IdentityProcessor, 
-    "bgm": BGMProcessor}
+    "bgm": BGMProcessor,
+    "ft": FTProcessor
+    }
 
 class TabularTransformer:
     def __init__(self, data_path: Union[str, Path], processor_type: str, is_y_cond: bool = False, num_classes: int = 2, splits: list[str] = ["train","val", "test"]):
@@ -98,17 +101,12 @@ class TabularTransformer:
         pass  
 
     def inverse_transform(self, x_cat, x_num, y):
-        try:
-            x_num = x_num.astype(np.float64)
-            x_cat = x_cat.astype(np.int64) # inverse preprocess from before might transform labels into strings
-        except ValueError:
-            pass
+        x_num=safe_convert(x_num, np.float64)
+        x_cat=safe_convert(x_cat, np.int64)
+
         x_cat, x_num, y = self.processor.inverse_transform(x_cat, x_num, y)
-        try:
-            x_num = x_num.astype(np.float64)
-            y = y.astype(np.int64) # inverse preprocess from before might transform labels into strings
-        except ValueError:
-            pass
+        x_num = safe_convert(x_num, np.float64)
+        y = safe_convert(y, np.int64)
         return x_cat, x_num, y
 
     def load_data(self, splits=["train", "val", "test"]):
@@ -153,12 +151,12 @@ class TabularTransformer:
         x_cat_train, x_num_train, y_train = self._get_concat_splits(splits=["train"]) #changed
         x_cat_val, x_num_val, y_val = self._get_concat_splits(splits=["val"])
         x_cat_test, x_num_test, y_test = self._get_concat_splits(splits=["test"])
-        test = {
-            k: {"test":v} for k, v in 
-            (("X_num", x_num_test), 
-            ("X_cat", x_cat_test), 
-            ("y", y_test))
-            }
+        # test = {
+        #     k: {"test":v} for k, v in 
+        #     (("X_num", x_num_test), 
+        #     ("X_cat", x_cat_test), 
+        #     ("y", y_test))
+        #     }
         val = {
             k: {"val":v} for k, v in 
             (("X_num", x_num_val), 
@@ -171,21 +169,36 @@ class TabularTransformer:
             ("X_cat", x_cat_train), 
             ("y", y_train))
             }
-        data = {split:test[split] | val[split] | train[split] for split in ["X_num", "X_cat", "y"]}
-        train_len = len(x_cat_train)
-        val_len = len(x_cat_val)
+        # data = {split:test[split] | val[split] | train[split] for split in ["X_num", "X_cat", "y"]}
+        data = {split: val[split] | train[split] for split in ["X_num", "X_cat", "y"]}
+        
+        train_len = len(x_cat_train) if x_cat_train is not None else 0
+        val_len = len(x_cat_val) if x_cat_val is not None else 0
         train_val_len = train_len + val_len
-        data["idx"] = {"test": np.arange(
-                train_val_len, train_val_len + len(x_cat_test), dtype=np.int64
-            )}
+        # data["idx"] = {"test": np.arange(
+        #         train_val_len, train_val_len + len(x_cat_test), dtype=np.int64
+        #     )}
 
-        trainval_idx ={"train": np.arange(train_len, dtype=np.int64), "val": np.arange(train_len, train_len + val_len, dtype=np.int64)}
-        data["idx"].update(trainval_idx)
+        data["idx"] ={"train": np.arange(train_len, dtype=np.int64), "val": np.arange(train_len, train_len + val_len, dtype=np.int64)}
+
         # trainval_idx = _make_split(train_len, trainval["y"], 2)
         # for x in data['X_cat'].values():
         #     x[x == 'nan'] = CAT_MISSING_VALUE
         # for k, v in _apply_split(trainval, trainval_idx).items():
         #     data[k].update(v)
+        if data["X_cat"]["train"] is None:
+            data["X_cat"] = None
+        if data["X_num"]["train"] is None:
+            data["X_num"] = None
+        if data["y"]["train"] is None:
+            data["y"] = None
         _save(out_dir, f"{self.config['name'].lower()}-{self.processor_type}", task_type=TaskType[self.config["dataset_config"]["problem_type"].upper()], **data)
         return out_dir
     
+def safe_convert(x, dtype):
+    if x is not None:
+        try:
+            return x.astype(dtype)
+        except ValueError:
+            return x
+    return x

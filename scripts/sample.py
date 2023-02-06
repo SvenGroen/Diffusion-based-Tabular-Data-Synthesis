@@ -144,7 +144,7 @@ def sample(
 
 
     X_gen, y_gen = x_gen.numpy(), y_gen.numpy()
-
+    X_cat, X_num = None, None
     ###
     # X_num_unnorm = X_gen[:, :num_numerical_features]
     # lo = np.percentile(X_num_unnorm, 2.5, axis=0)
@@ -154,7 +154,8 @@ def sample(
     # y_gen = y_gen[np.all(idx, axis=1)]
     ###
     # Inverse Normalization
-    num_numerical_features = num_numerical_features + int(D.is_regression and not model_params["is_y_cond"])
+    # num_numerical_features = num_numerical_features + int(D.is_regression and not model_params["is_y_cond"])
+    num_numerical_features = num_numerical_features_ + int(D.is_regression and not model_params["is_y_cond"])  # CHANGED FROM: num_numerical_features  (_ after num_numerical_features)
 
     X_num_ = X_gen
     if num_numerical_features < X_gen.shape[1]:
@@ -184,7 +185,7 @@ def sample(
             X_num = round_columns(X_num_real, X_num, disc_cols)
 
     # Inverse special processing
-
+    
     X_cat, X_num, y_gen = tabular_Transformer.inverse_transform(X_cat, X_num, y_gen) 
     # TODO: check if identity is working 
     # + check if cat values are strings of floats and if nums are still normalized

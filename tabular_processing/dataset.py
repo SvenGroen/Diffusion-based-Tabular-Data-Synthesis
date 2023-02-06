@@ -189,7 +189,7 @@ def _save(
     if task_type != TaskType.REGRESSION:
         y_unique = {k: set(v.tolist()) for k, v in y.items()}
         assert y_unique['train'] == set(range(max(y_unique['train']) + 1))
-        for x in ['val', 'test']:
+        for x in ['val']:
             assert y_unique[x] <= y_unique['train']
         del x
 

@@ -61,7 +61,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
             "env" : {
                 "PYTHONPATH": "${workspaceFolder}"
             },
@@ -69,8 +69,8 @@
                 "--config",
                 "${workspaceFolder}\\exp\\adult\\config.toml",
                 "--train",
-                // "--sample",
-                // "--eval"
+                "--sample",
+                "--eval"
             ]
         },
         {
