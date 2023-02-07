@@ -155,10 +155,12 @@ def sample(
     ###
     # Inverse Normalization
     # num_numerical_features = num_numerical_features + int(D.is_regression and not model_params["is_y_cond"])
-    num_numerical_features = num_numerical_features_ + int(D.is_regression and not model_params["is_y_cond"])  # CHANGED FROM: num_numerical_features  (_ after num_numerical_features)
-
+    # num_numerical_features = num_numerical_features_ + int(D.is_regression and not model_params["is_y_cond"])  # CHANGED FROM: num_numerical_features  (_ after num_numerical_features)
+    num_numerical_features = tabular_Transformer.dim_info["transformed"]["num_dim"] + int(D.is_regression and not model_params["is_y_cond"])
+     
     X_num_ = X_gen
-    if num_numerical_features < X_gen.shape[1]:
+    if tabular_Transformer.dim_info["transformed"]["cat_dim"] > 0: # if transformed data has categorical features, transform them back
+    # if num_numerical_features < X_gen.shape[1]:
         np.save(os.path.join(parent_dir, 'X_cat_unnorm'), X_gen[:, num_numerical_features:])
         # _, _, cat_encoder = lib.cat_encode({'train': X_cat_real}, T_dict['cat_encoding'], y_real, T_dict['seed'], True)
         if T_dict['cat_encoding'] == 'one-hot':
@@ -187,14 +189,12 @@ def sample(
     # Inverse special processing
     
     X_cat, X_num, y_gen = tabular_Transformer.inverse_transform(X_cat, X_num, y_gen) 
-    # TODO: check if identity is working 
-    # + check if cat values are strings of floats and if nums are still normalized
 
     # Save for Evaluation
     print("Saving Synthetic Data at: ", str(parent_dir))
     if num_numerical_features != 0:
         print("Num shape: ", X_num.shape)
         np.save(os.path.join(parent_dir, 'X_num_train'), X_num)
-    if num_numerical_features < X_gen.shape[1]:
+    if X_cat is not None and X_cat.shape[1] > 0:
         np.save(os.path.join(parent_dir, 'X_cat_train'), X_cat)
     np.save(os.path.join(parent_dir, 'y_train'), y_gen)

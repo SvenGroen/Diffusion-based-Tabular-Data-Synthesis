@@ -68,9 +68,10 @@
             "args":[
                 "--config",
                 "${workspaceFolder}\\exp\\adult\\config.toml",
-                "--train",
-                "--sample",
-                "--eval"
+                // "--train",
+                // "--sample",
+                "--eval",
+                "--change_val"
             ]
         },
         {
@@ -79,7 +80,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
             "env" : {
                 "PYTHONPATH": "${workspaceFolder}"
             },

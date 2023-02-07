@@ -37,10 +37,12 @@ class TabularTransformer:
         self.processor_type = processor_type if processor_type is not None else "identity"
         self.processor = self._get_processor_instance()
         self.cat_values = self._get_all_category_values()
+        self.dim_info={}
     
     def _get_processor_instance(self):
         if self.processor_type not in SUPPORTED_PROCESSORS:
             raise ValueError(f"Processor type {self.processor_type} is not supported.")
+        print("Selected tabular processor: ", self.processor_type)
         params = self.config["dataset_config"]
         x_cat, x_num, y = self._get_concat_splits(splits=["train"]) # changed
         return SUPPORTED_PROCESSORS[self.processor_type](x_cat, x_num, y, **params)
@@ -84,6 +86,8 @@ class TabularTransformer:
         return df
 
     def transform(self):
+
+        self.dim_info["original"] = save_dimensionality(self.x_cat["train"],self.x_num["train"])
         self.processor.fit(meta_data=self.cat_values)
         splits = ["train","val"]
         for split in splits:
@@ -98,7 +102,9 @@ class TabularTransformer:
             self.x_cat[split] = x_cat
             self.x_num[split] = x_num
             self.y[split] = y
-        pass  
+
+        self.dim_info["transformed"] = save_dimensionality(self.x_cat["train"],self.x_num["train"])
+        return self.x_cat, self.x_num, self.y
 
     def inverse_transform(self, x_cat, x_num, y):
         x_num=safe_convert(x_num, np.float64)
@@ -107,6 +113,7 @@ class TabularTransformer:
         x_cat, x_num, y = self.processor.inverse_transform(x_cat, x_num, y)
         x_num = safe_convert(x_num, np.float64)
         y = safe_convert(y, np.int64)
+
         return x_cat, x_num, y
 
     def load_data(self, splits=["train", "val", "test"]):
@@ -151,12 +158,12 @@ class TabularTransformer:
         x_cat_train, x_num_train, y_train = self._get_concat_splits(splits=["train"]) #changed
         x_cat_val, x_num_val, y_val = self._get_concat_splits(splits=["val"])
         x_cat_test, x_num_test, y_test = self._get_concat_splits(splits=["test"])
-        # test = {
-        #     k: {"test":v} for k, v in 
-        #     (("X_num", x_num_test), 
-        #     ("X_cat", x_cat_test), 
-        #     ("y", y_test))
-        #     }
+        test = {
+            k: {"test":v} for k, v in 
+            (("X_num", x_num_test), 
+            ("X_cat", x_cat_test), 
+            ("y", y_test))
+            }
         val = {
             k: {"val":v} for k, v in 
             (("X_num", x_num_val), 
@@ -169,17 +176,17 @@ class TabularTransformer:
             ("X_cat", x_cat_train), 
             ("y", y_train))
             }
-        # data = {split:test[split] | val[split] | train[split] for split in ["X_num", "X_cat", "y"]}
-        data = {split: val[split] | train[split] for split in ["X_num", "X_cat", "y"]}
+        data = {split:test[split] | val[split] | train[split] for split in ["X_num", "X_cat", "y"]}
+        # data = {split: val[split] | train[split] for split in ["X_num", "X_cat", "y"]}
         
         train_len = len(x_cat_train) if x_cat_train is not None else 0
         val_len = len(x_cat_val) if x_cat_val is not None else 0
         train_val_len = train_len + val_len
-        # data["idx"] = {"test": np.arange(
-        #         train_val_len, train_val_len + len(x_cat_test), dtype=np.int64
-        #     )}
+        data["idx"] = {"test": np.arange(
+                train_val_len, train_val_len + len(x_cat_test), dtype=np.int64
+            )}
 
-        data["idx"] ={"train": np.arange(train_len, dtype=np.int64), "val": np.arange(train_len, train_len + val_len, dtype=np.int64)}
+        data["idx"].update({"train": np.arange(train_len, dtype=np.int64), "val": np.arange(train_len, train_len + val_len, dtype=np.int64)})
 
         # trainval_idx = _make_split(train_len, trainval["y"], 2)
         # for x in data['X_cat'].values():
@@ -194,7 +201,12 @@ class TabularTransformer:
             data["y"] = None
         _save(out_dir, f"{self.config['name'].lower()}-{self.processor_type}", task_type=TaskType[self.config["dataset_config"]["problem_type"].upper()], **data)
         return out_dir
-    
+
+def save_dimensionality(x_cat, x_num):
+        num_dim = x_num.shape[1] if x_num is not None else -1
+        cat_dim = x_cat.shape[1] if x_cat is not None else -1
+        return {"num_dim": num_dim, "cat_dim": cat_dim}
+
 def safe_convert(x, dtype):
     if x is not None:
         try:

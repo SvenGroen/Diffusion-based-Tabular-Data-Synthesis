@@ -1,4 +1,4 @@
-parent_dir = "exp\\adult\\many-exps\\2"
+parent_dir = "exp\\adult\\dppm_test_2_best"
 real_data_path = "data/adult/"
 num_numerical_features = 6
 model_type = "mlp"
@@ -12,7 +12,9 @@ is_y_cond = true
 [model_params.rtdl_params]
 d_layers = [
     1024,
-    512,
+    128,
+    128,
+    128,
 ]
 dropout = 0.0
 
@@ -23,7 +25,7 @@ scheduler = "cosine"
 
 [train.main]
 steps = 50
-lr = 0.00038473523622807365
+lr = 0.0002584916622843388
 weight_decay = 0.0
 batch_size = 256
 
@@ -37,12 +39,12 @@ cat_encoding = "__none__"
 y_policy = "default"
 
 [tabular_processor]
-type = "bgm"
+type = "ft"
 
 [sample]
 num_samples = 10
 batch_size = 10000
-seed = 0
+seed = 4
 
 [eval.type]
 eval_model = "catboost"

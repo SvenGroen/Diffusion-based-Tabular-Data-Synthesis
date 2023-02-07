@@ -397,7 +397,9 @@ def transform_dataset(
     num_transform = None
     cat_transform = None
     X_num = dataset.X_num
-
+    tmp={}
+    for split in skip_splits:
+        tmp[split]=X_num.pop(split)
     if X_num is not None and transformations.normalization is not None:
         X_num, num_transform = normalize(
             X_num,
@@ -406,7 +408,8 @@ def transform_dataset(
             return_normalizer=True
         )
         num_transform = num_transform
-
+    for split in skip_splits:
+            X_num[split] = tmp[split] 
 
     if dataset.X_cat is None:
         assert transformations.cat_nan_policy is None
@@ -417,10 +420,10 @@ def transform_dataset(
         X_cat = cat_process_nans(dataset.X_cat, transformations.cat_nan_policy)
         if transformations.cat_min_frequency is not None:
             X_cat = cat_drop_rare(X_cat, transformations.cat_min_frequency)
-        # # remove cat encoding for certain splits
-        # tmp={}
-        # for split in skip_splits:
-        #     tmp[split]=X_cat.pop(split)
+        # remove cat encoding for certain splits
+        tmp={}
+        for split in skip_splits:
+            tmp[split]=X_cat.pop(split)
         X_cat, is_num, cat_transform = cat_encode(
             X_cat,
             transformations.cat_encoding,
@@ -428,8 +431,8 @@ def transform_dataset(
             transformations.seed,
             return_encoder=True
         )
-        # for split in skip_splits:
-        #     X_cat[split] = tmp[split] 
+        for split in skip_splits:
+            X_cat[split] = tmp[split] 
         if is_num:
             X_num = (
                 X_cat

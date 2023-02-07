@@ -1,0 +1,12 @@
+{
+    "eval_type": "synthetic",
+    "dataset": "data/adult/",
+    "sim_score": {
+        "score": 0.5206263453198987,
+        "basic_score": 0.5073758547227546,
+        "corr_score": 0.3389470177245152,
+        "ml_score": 0.8036425894385918,
+        "sup_score": 0.9531662647136325,
+        "pmse_score": 2.791604656619128e-135
+    }
+}

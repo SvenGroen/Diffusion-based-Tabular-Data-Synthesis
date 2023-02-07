@@ -47,9 +47,8 @@ def make_dataset(
         X_cat = {} if os.path.exists(os.path.join(data_path, 'X_cat_train.npy')) or not is_y_cond else None
         X_num = {} if os.path.exists(os.path.join(data_path, 'X_num_train.npy')) else None
         y = {} 
-        all_splits = ['train', 'val', 'test']
-        splits = [split for split in all_splits if split not in skip_splits]
-        for split in splits:
+
+        for split in ['train', 'val', 'test']:
             X_num_t, X_cat_t, y_t = lib.read_pure_data(data_path, split)
             if X_num is not None:
                 X_num[split] = X_num_t
@@ -64,7 +63,7 @@ def make_dataset(
         X_num = {} if os.path.exists(os.path.join(data_path, 'X_num_train.npy')) or not is_y_cond else None
         y = {}
 
-        for split in splits:
+        for split in ['train', 'val', 'test']:
             X_num_t, X_cat_t, y_t = lib.read_pure_data(data_path, split)
             if not is_y_cond:
                 X_num_t = concat_y_to_X(X_num_t, y_t)
