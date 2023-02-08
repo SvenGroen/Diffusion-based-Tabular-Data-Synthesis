@@ -220,6 +220,19 @@
             },
             "args":[
             ]
-        }   
+        } ,  
+        {
+            "name": "Pytest",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env" : {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args":[
+            ]
+        }  
     ]
 }    

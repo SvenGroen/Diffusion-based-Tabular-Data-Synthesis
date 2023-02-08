@@ -14,11 +14,11 @@ from pathlib import Path
 from typing import Any, Optional, cast
 from urllib.request import urlretrieve
 
-import catboost.datasets
+# import catboost.datasets
 # import geopy.distance
 import numpy as np
 import pandas as pd
-import pyarrow.csv
+# import pyarrow.csv
 import sklearn.datasets
 import sklearn.utils
 from sklearn.model_selection import train_test_split
@@ -458,42 +458,42 @@ def covtype():
     )
 
 
-def adult():
-    dataset_dir, _ = _start('adult')
+# def adult():
+#     dataset_dir, _ = _start('adult')
 
-    df_trainval, df_test = catboost.datasets.adult()
-    df_trainval = cast(pd.DataFrame, df_trainval)
-    df_test = cast(pd.DataFrame, df_test)
-    assert (df_trainval.dtypes == df_test.dtypes).all()
-    assert (df_trainval.columns == df_test.columns).all()
-    categorical_mask = cast(pd.Series, df_trainval.dtypes != np.float64)
+#     df_trainval, df_test = catboost.datasets.adult()
+#     df_trainval = cast(pd.DataFrame, df_trainval)
+#     df_test = cast(pd.DataFrame, df_test)
+#     assert (df_trainval.dtypes == df_test.dtypes).all()
+#     assert (df_trainval.columns == df_test.columns).all()
+#     categorical_mask = cast(pd.Series, df_trainval.dtypes != np.float64)
 
-    def get_Xy(df: pd.DataFrame):
-        y = (df.pop('income') == '>50K').values.astype('int64')
-        return {
-            'X_num': df.loc[:, ~categorical_mask].values,
-            'X_cat': df.loc[:, categorical_mask].values,
-            'y': y,
-        }
+#     def get_Xy(df: pd.DataFrame):
+#         y = (df.pop('income') == '>50K').values.astype('int64')
+#         return {
+#             'X_num': df.loc[:, ~categorical_mask].values,
+#             'X_cat': df.loc[:, categorical_mask].values,
+#             'y': y,
+#         }
 
-    data = {k: {'test': v} for k, v in get_Xy(df_test).items()} | {
-        'idx': {
-            'test': np.arange(
-                len(df_trainval), len(df_trainval) + len(df_test), dtype=np.int64
-            )
-        }
-    } # union operator is only available in Python 3.9+
+#     data = {k: {'test': v} for k, v in get_Xy(df_test).items()} | {
+#         'idx': {
+#             'test': np.arange(
+#                 len(df_trainval), len(df_trainval) + len(df_test), dtype=np.int64
+#             )
+#         }
+#     } # union operator is only available in Python 3.9+
 
 
-    trainval_data = get_Xy(df_trainval)
-    train_val_idx = _make_split(len(df_trainval), trainval_data['y'], 2)
-    data['idx'].update(train_val_idx)
-    for x in data['X_cat'].values():
-        x[x == 'nan'] = CAT_MISSING_VALUE
-    for k, v in _apply_split(trainval_data, train_val_idx).items():
-        data[k].update(v)
+#     trainval_data = get_Xy(df_trainval)
+#     train_val_idx = _make_split(len(df_trainval), trainval_data['y'], 2)
+#     data['idx'].update(train_val_idx)
+#     for x in data['X_cat'].values():
+#         x[x == 'nan'] = CAT_MISSING_VALUE
+#     for k, v in _apply_split(trainval_data, train_val_idx).items():
+#         data[k].update(v)
 
-    _save(dataset_dir, 'Adult', TaskType.BINCLASS, **data)
+#     _save(dataset_dir, 'Adult', TaskType.BINCLASS, **data)
 
 
 def mslr_web10k():
@@ -584,7 +584,7 @@ def main(argv):
     # Python packages
     # california_housing()  # Scikit-Learn
     # covtype()  # Scikit-Learn
-    adult()  # CatBoost
+    # adult()  # CatBoost
 
     # Other
     # mslr_web10k()

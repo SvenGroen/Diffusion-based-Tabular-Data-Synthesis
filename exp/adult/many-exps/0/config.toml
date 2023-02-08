@@ -46,7 +46,7 @@ type = "ft"
 [sample]
 num_samples = 10
 batch_size = 10000
-seed = 0
+seed = 3
 
 [eval.type]
 eval_model = "catboost"

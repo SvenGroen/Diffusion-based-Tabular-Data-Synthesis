@@ -21,12 +21,14 @@ class FTProcessor(TabularProcessor):
             bias=True)
         self.attr_enc = OrdinalEncoder()
         self.target_enc = OrdinalEncoder()
+        self._was_fit = False
 
 
 
     def transform(self, x_cat: np.ndarray, x_num: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
         x_cat = self.attr_enc.transform(x_cat)
+        x_cat = x_cat + 1 # tokenization starts from 1 (will in reverse function be subtracted by 1)
         y = self.target_enc.transform(y.reshape(-1,1))
 
         # transform from [bs, num_features] to [bs, 1, num_features]
@@ -58,7 +60,7 @@ class FTProcessor(TabularProcessor):
         # add dummy dim at the end of x_num
         x_num = torch.Tensor(x_num.reshape(-1, x_num.shape[1], 1))
         x_cat, x_num = self.tokenizer.recover(x_num, d_numerical=self.d_numerical)
-        x_cat = self.attr_enc.inverse_transform(x_cat - 1) # x_cat return by tokenizer is 1-indexed (--> "new_Batch_cat[j, i] = nearest + 1")
+        x_cat = self.attr_enc.inverse_transform(x_cat -1) # x_cat return by tokenizer is 1-indexed (--> "new_Batch_cat[j, i] = nearest + 1")
         y_pred = self.target_enc.inverse_transform(y_pred)
         # to numpy
         x_num = x_num.numpy()
@@ -73,6 +75,7 @@ class FTProcessor(TabularProcessor):
         if self.target_column in self.cat_columns:
             self.target_enc.fit(self.y.reshape(-1,1))
         self.attr_enc.fit(self.x_cat)
+        print("self.attr_enc.categories_:", self.attr_enc.categories_)
         self._was_fit = True
         return self
 

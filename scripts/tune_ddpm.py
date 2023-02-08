@@ -124,6 +124,7 @@ def objective(trial):
     for sample_seed in range(n_datasets):
         base_config['sample']['seed'] = sample_seed
         lib.dump_config(base_config, exps_path / 'config.toml')
+        print("--------------------->SAMPLE SEED: ", sample_seed, "<---------------------")
         try:
             subprocess.run([sys.executable, f'{pipeline}', '--config', f'{exps_path / "config.toml"}', '--sample', '--eval', '--change_val'], check=True,  env=my_env)
         except subprocess.CalledProcessError as e:
