@@ -154,7 +154,7 @@ study = optuna.create_study(
 print("---Starting optimizing Optune run---")
 n_trials=50
 if args.debug:
-    n_trials=5
+    n_trials=10
     print(f"DEBUG MODE IS ON: Only Running {n_trials} Optuna trials")
     
 study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
