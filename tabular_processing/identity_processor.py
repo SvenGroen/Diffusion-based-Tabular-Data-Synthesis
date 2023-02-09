@@ -26,4 +26,5 @@ class IdentityProcessor(TabularProcessor):
     def fit(self, *args, **kwargs) -> None:
         # No fitting is needed for the identity processor, so this method
         # is a no-op.
+        self._was_fit = True
         return self

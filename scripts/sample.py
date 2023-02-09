@@ -54,9 +54,7 @@ def sample(
         num_classes=model_params['num_classes'],
         is_y_cond=model_params['is_y_cond'])
     # also transform because information from transformation process might be needed
-    # TODO: find a way to only use fit and not transform for faster processing
-    # TODO: save and load the tabular transformer
-    tabular_Transformer.fit_transform() 
+    tabular_Transformer.fit_transform(reload = True, save_processor = True) 
     real_data_path = os.path.join(real_data_path, processor_type)
 
 

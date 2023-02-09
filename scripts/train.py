@@ -110,7 +110,7 @@ def train(
         processor_type,
         num_classes=model_params['num_classes'],
         is_y_cond=model_params['is_y_cond'])
-    tabular_Transformer.fit_transform()
+    tabular_Transformer.fit_transform(reload = True, save_processor = True)
     real_data_path = tabular_Transformer.save_data()
 
 

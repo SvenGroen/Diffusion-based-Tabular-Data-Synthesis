@@ -21,7 +21,7 @@ class FTProcessor(TabularProcessor):
             bias=True)
         self.attr_enc = OrdinalEncoder()
         self.target_enc = OrdinalEncoder()
-        self._was_fit = False
+
 
 
 

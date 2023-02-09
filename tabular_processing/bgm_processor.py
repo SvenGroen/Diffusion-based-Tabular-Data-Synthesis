@@ -71,7 +71,7 @@ class BGMProcessor(TabularProcessor):
                                         non_categorical_list=self.data_prep.column_types["non_categorical"],
                                         n_clusters=10, eps=0.005)
         self.data_transformer.fit()
-        
+        self._was_fit = True
         return self
 
     def transform(self, x_cat : np.ndarray, x_num : np.ndarray, y : np.ndarray):

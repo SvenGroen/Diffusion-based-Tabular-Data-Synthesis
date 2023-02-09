@@ -36,7 +36,7 @@ class Tokenizer(nn.Module):
             nn_init.kaiming_uniform_(self.bias, a=math.sqrt(5))
             self.bias.requires_grad = False
         print("Weight: ", self.weight)
-        print("category_embeddings: ", self.category_embeddings.weight)
+
 
     @property
     def n_tokens(self) -> int:

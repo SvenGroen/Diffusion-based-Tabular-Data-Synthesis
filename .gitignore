@@ -26,3 +26,4 @@ exps/
 *.amlignore
 secrets.json
 outputs/
+processor_state/

@@ -59,7 +59,7 @@
             "name": "Pipeline",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "${workspaceFolder}/scripts/pipeline.py",
             "console": "integratedTerminal",
             "justMyCode": false,
             "env" : {
@@ -68,8 +68,8 @@
             "args":[
                 "--config",
                 "${workspaceFolder}\\exp\\adult\\config.toml",
-                // "--train",
-                // "--sample",
+                "--train",
+                "--sample",
                 "--eval",
                 "--change_val"
             ]

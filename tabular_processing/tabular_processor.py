@@ -19,6 +19,7 @@ class TabularProcessor(ABC):
         self.x_num = x_num
         self.y = y
         self.seed = 0
+        self._was_fit = False
 
     @abstractmethod
     def transform(self, x_cat : np.ndarray, x_num : np.ndarray, y : np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:

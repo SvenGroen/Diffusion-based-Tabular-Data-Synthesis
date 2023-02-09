@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Tuple, Union
 from enum import Enum
 import lib
+import pickle
 import numpy as np
 
 def concat_y_to_X(X, y):
@@ -63,13 +64,56 @@ class TabularTransformer:
             all_cat_values[col] = all[col].unique()
         return all_cat_values
 
-    def fit(self):
-        self.processor.fit(meta_data=self.cat_values)
+    def fit(self, reload: bool = True, save_processor: bool = True, **kwargs):
+        was_loaded = False # to also save unnecessary saving if model was just loaded
+        if reload:
+            try:
+                self.processor = self.load_processor()
+                was_loaded = True
+            except FileNotFoundError as e:
+                print("Error while loading processor state, file was not found: ", e)
+                
+        if not was_loaded:
+            print("Fitting processor")
+            self.processor.fit(meta_data=self.cat_values)
+        if save_processor and not was_loaded:
+            self.save_processor()
         pass
 
-    def fit_transform(self):
-        self.fit()
-        self.transform()
+
+    def load_processor(self, path: Union[str, Path]="./processor_state/", filename: str=None):
+        path = path if isinstance(path, Path) else Path(path)
+        if filename is None:
+            filename = f"processor_{self.processor_type}.pkl"
+        path = path / filename
+        # load with pickle
+        try:
+            processor = pickle.load(open(path, "rb"))
+            print(f"Loaded processor of type {self.processor_type} state from: ", path)
+        except Exception as e:
+            print("Error while loading processor state: ", e)
+            raise e       
+        return processor
+
+    def save_processor(self, path: Union[str, Path]="./processor_state/"):
+        path = path if isinstance(path, Path) else Path(path)
+        path.mkdir(parents=True, exist_ok=True)
+        path = path / f"processor_{self.processor_type}.pkl"
+        # save with pickle
+        try:
+            with open(path, "wb") as f:
+                pickle.dump(self.processor, f)
+                print("Saved processor state to: ", path)
+        except Exception as e:
+            raise e
+            return None
+        return path
+
+
+
+    def fit_transform(self,**kwargs):
+        self.fit(**kwargs)
+        self.transform(**kwargs)
         pass
 
     def to_pd_DataFrame(self, splits=["train"]):
@@ -85,7 +129,7 @@ class TabularTransformer:
         df = self.processor.to_pd_DataFrame(x_cat, x_num, y, cat_cols, num_cols, y_col)
         return df
 
-    def transform(self):
+    def transform(self, **kwargs):
 
         self.dim_info["original"] = save_dimensionality(self.x_cat["train"],self.x_num["train"])
         self.processor.fit(meta_data=self.cat_values)
