@@ -91,7 +91,8 @@
                 "catboost",
                 "dppm_test_2",
                 "--eval_seeds",
-                "--debug"
+                "--debug",
+                "--optimize_sim_score"
             ]
         },
         {

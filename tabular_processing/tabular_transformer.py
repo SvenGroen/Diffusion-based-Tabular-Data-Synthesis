@@ -132,7 +132,7 @@ class TabularTransformer:
     def transform(self, **kwargs):
 
         self.dim_info["original"] = save_dimensionality(self.x_cat["train"],self.x_num["train"])
-        self.processor.fit(meta_data=self.cat_values)
+        # self.processor.fit(meta_data=self.cat_values)
         splits = ["train","val"]
         for split in splits:
             x_cat, x_num, y = self._get_concat_splits(splits=[split]) # TODO: Check if no need to transform test and val

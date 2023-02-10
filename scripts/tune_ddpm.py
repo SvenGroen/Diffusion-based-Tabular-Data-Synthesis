@@ -18,6 +18,7 @@ parser.add_argument('eval_model', type=str)
 parser.add_argument('prefix', type=str)
 parser.add_argument('--eval_seeds', action='store_true',  default=False)
 parser.add_argument("--debug", action='store_true', default=False)
+parser.add_argument("--optimize_sim_score", action='store_true', default=False)
 run = Run.get_context()
 args = parser.parse_args()
 if args.debug:
@@ -109,7 +110,6 @@ def objective(trial):
         subprocess.run([sys.executable, f'{pipeline}', '--config', f'{exps_path / "config.toml"}', '--train', '--change_val'], check=True, env=my_env)
     except subprocess.CalledProcessError as e:
         raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
-    print("Finished to run pipeline from tune_ddpm")
     print("----->FINISHED to run pipeline from tune_ddpm<--------: ")
     
     # subprocess.check_output("dir /f",shell=True,stderr=subprocess.STDOUT)
@@ -145,7 +145,10 @@ def objective(trial):
         run.log(k, v)
 
     print(f"Score calculated: {score / n_datasets}")
-    return score / n_datasets
+    if not args.optimize_sim_score:
+        return score / n_datasets
+    else:
+        return lib.average_per_key(sim_score)['score-mean']
 
 study = optuna.create_study(
     direction='maximize',
