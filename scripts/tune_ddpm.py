@@ -146,8 +146,10 @@ def objective(trial):
 
     print(f"Score calculated: {score / n_datasets}")
     if not args.optimize_sim_score:
+        print(f"optimizing for {args.eval_model} score")
         return score / n_datasets
     else:
+        print("optimizing for similarity score")
         return lib.average_per_key(sim_score)['score-mean']
 
 study = optuna.create_study(
