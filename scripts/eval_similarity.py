@@ -32,7 +32,15 @@ def calculate_similarity_score(
     zero.improve_reproducibility(seed)
     if eval_type != "real":
         synthetic_data_path = os.path.join(parent_dir)
-    
+        # info.json is not always copied to synthetic_data_path but is needed for tabular transformer (tvae tune for example)
+        if not "info.json" in os.listdir(synthetic_data_path):
+            try:
+                # copy info.json from real_data_path with shutil
+                import shutil
+                shutil.copy(os.path.join(real_data_path, "info.json"), synthetic_data_path)
+            except Exception as e:
+                print("Could not copy info.json from real_data_path to synthetic_data_path, Error: ", e)
+
     # apply Transformations ? 
     T = lib.Transformations(**T_dict)
     
@@ -42,7 +50,6 @@ def calculate_similarity_score(
         X_num_val, X_cat_val, y_val = read_pure_data(real_data_path, 'val')
 
     # validation
-    
     val_transform = TabularTransformer(
         real_data_path, 
         "identity",
@@ -62,7 +69,12 @@ def calculate_similarity_score(
         raise "Choose eval method"
 
     path = real_data_path if eval_type == 'real' else synthetic_data_path
-    
+
+
+
+
+
+
     print(f"Loading {eval_type} Training data for comparison to the real Test data from {str(path)}")
     print(f"Test (and val) Data will be Loaded from {real_data_path}")
     train_transform = TabularTransformer(

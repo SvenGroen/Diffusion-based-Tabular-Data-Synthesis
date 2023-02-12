@@ -6,22 +6,30 @@ import os
 import optuna
 import argparse
 from pathlib import Path
+from azureml.core import Run
 from train_sample_tvae import train_tvae, sample_tvae
 from scripts.eval_catboost import train_catboost
+from scripts.eval_similarity import calculate_similarity_score
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('data_path', type=str)
 parser.add_argument('train_size', type=int)
 parser.add_argument('eval_type', type=str)
 parser.add_argument('device', type=str)
+parser.add_argument("--optimize_sim_score", action='store_true', default=False)
+parser.add_argument("--debug", action='store_true', default=False)
 
 args = parser.parse_args()
+run = Run.get_context()
 real_data_path = args.data_path
 eval_type = args.eval_type
 train_size = args.train_size
 device = args.device
 assert eval_type in ('merged', 'synthetic')
-
+config_path = real_data_path.replace('data', 'exp')
+raw_config = lib.load_config(os.path.join(config_path, "config.toml"))
+# raw_config =  {}
 def objective(trial):
     
     lr = trial.suggest_loguniform('lr', 0.00001, 0.003)
@@ -52,6 +60,7 @@ def objective(trial):
     loss_factor = trial.suggest_loguniform('loss_factor', 0.001, 10)
 
 
+
     train_params = {
         "lr": lr,
         "epochs": steps,
@@ -62,8 +71,16 @@ def objective(trial):
         "decompress_dims": d_layers
     }
 
+    if args.debug:
+        train_params["epochs"] = 10
+        num_samples = 1000
+        train_params["batch_size"] = 32
+        steps = 1000
+
     trial.set_user_attr("train_params", train_params)
     trial.set_user_attr("num_samples", num_samples)
+
+
 
     score = 0.0
     with tempfile.TemporaryDirectory() as dir_:
@@ -75,7 +92,7 @@ def objective(trial):
             change_val=True,
             device=device
         )
-
+        sim_score = []
         for sample_seed in range(5):
             sample_tvae(
                 ctabgan,
@@ -105,9 +122,27 @@ def objective(trial):
                 change_val=True,
                 seed = 0
             )
-
+            sim_report = calculate_similarity_score(
+                parent_dir=dir_,
+                real_data_path=real_data_path,
+                eval_type=eval_type,
+                num_classes=raw_config['model_params']['num_classes'],
+                # is_y_cond=False,
+                T_dict=raw_config['eval']['T'],
+                seed=0,
+                change_val=True,
+                table_evaluate=False,
+            )
+            sim_score.append(sim_report['sim_score'])
             score += metrics.get_val_score()
-    return score / 5
+    for k, v in lib.average_per_key(sim_score).items():
+        run.log(k, v)
+    if args.optimize_sim_score:
+        print("optimizing for similarity score")
+        return lib.average_per_key(sim_score)['score-mean']
+    else:
+        print(f"optimizing for {args.eval_model} score")
+        return score / 5
 
 
 study = optuna.create_study(

@@ -26,13 +26,13 @@ SUPPORTED_PROCESSORS = {
     }
 
 class TabularTransformer:
-    def __init__(self, data_path: Union[str, Path], processor_type: str, is_y_cond: bool = False, num_classes: int = 2, splits: list[str] = ["train","val", "test"]):
+    def __init__(self, data_path: Union[str, Path], processor_type: str, num_classes: int = 2, splits: list[str] = ["train","val", "test"], **kwargs):
         self.data_path = data_path if isinstance(data_path, Path) else Path(data_path)
         self.config = json.load(open(self.data_path / "info.json"))
         self.x_cat = {}
         self.x_num = {}
         self.y = {}
-        self.is_y_cond = is_y_cond
+        # self.is_y_cond = is_y_cond
         self.num_classes = num_classes
         self.load_data(splits=splits)
         self.processor_type = processor_type if processor_type is not None else "identity"
@@ -45,7 +45,7 @@ class TabularTransformer:
             raise ValueError(f"Processor type {self.processor_type} is not supported.")
         print("Selected tabular processor: ", self.processor_type)
         params = self.config["dataset_config"]
-        x_cat, x_num, y = self._get_concat_splits(splits=["train"]) # changed
+        x_cat, x_num, y = self._get_concat_splits(splits=["train"]) # changed (only allow processor to see train data)
         return SUPPORTED_PROCESSORS[self.processor_type](x_cat, x_num, y, **params)
 
     def _get_concat_splits(self, splits:list[str] = ["train","val"]) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -169,8 +169,8 @@ class TabularTransformer:
                 X_num_t, X_cat_t, y_t = lib.read_pure_data(self.data_path, split)
                 if self.x_num is not None:
                     self.x_num[split] = X_num_t
-                if not self.is_y_cond:
-                    X_cat_t = concat_y_to_X(X_cat_t, y_t)
+                # if not self.is_y_cond:
+                #     X_cat_t = concat_y_to_X(X_cat_t, y_t)
                 if self.x_cat is not None:
                     self.x_cat[split] = X_cat_t
                 self.y[split] = y_t
@@ -178,8 +178,8 @@ class TabularTransformer:
         # regression
             for split in splits:
                 x_num_t, x_cat_t, y_t = lib.read_pure_data(self.data_path, split)
-                if not self.is_y_cond:
-                    x_num_t = concat_y_to_X(x_num_t, y_t)
+                # if not self.is_y_cond:
+                #     x_num_t = concat_y_to_X(x_num_t, y_t)
                 if self.x_num is not None:
                     self.x_num[split] = x_num_t
                 if self.x_cat is not None:

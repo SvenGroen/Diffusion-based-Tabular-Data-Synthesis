@@ -41,12 +41,12 @@ cat_encoding = "__none__"
 y_policy = "default"
 
 [tabular_processor]
-type = "bgm"
+type = "identity"
 
 [sample]
 num_samples = 10
 batch_size = 10000
-seed = 3
+seed = 0
 
 [eval.type]
 eval_model = "catboost"
