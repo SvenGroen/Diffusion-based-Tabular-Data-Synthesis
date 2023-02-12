@@ -10,7 +10,7 @@ from azureml.core import Run
 from train_sample_tvae import train_tvae, sample_tvae
 from scripts.eval_catboost import train_catboost
 from scripts.eval_similarity import calculate_similarity_score
-
+import sys
 
 parser = argparse.ArgumentParser()
 parser.add_argument('data_path', type=str)
@@ -184,5 +184,7 @@ train_tvae(
 
 lib.dump_config(config, config["parent_dir"]+"config.toml")
 
-subprocess.run(['python3.9', "scripts/eval_seeds.py", '--config', f'{config["parent_dir"]+"config.toml"}',
-                '10', "tvae", eval_type, "catboost", "5"], check=True)
+my_env = os.environ.copy()
+my_env["PYTHONPATH"] = os.getcwd() # Needed to run the subscripts
+subprocess.run([sys.executable, "scripts/eval_seeds.py", '--config', f'{config["parent_dir"]+"config.toml"}',
+                '10', "tvae", eval_type, "catboost", "5"], check=True, env=my_env)
