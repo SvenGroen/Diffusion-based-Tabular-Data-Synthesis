@@ -2,25 +2,33 @@ from multiprocessing.sharedctypes import RawValue
 import tempfile
 import subprocess
 import lib
-import os
+import os, sys
 import optuna
 import argparse
 from pathlib import Path
+from azureml.core import Run
 from train_sample_ctabgan import train_ctabgan, sample_ctabgan
 from scripts.eval_catboost import train_catboost
+from scripts.eval_similarity import calculate_similarity_score
 
 parser = argparse.ArgumentParser()
 parser.add_argument('data_path', type=str)
 parser.add_argument('train_size', type=int)
 parser.add_argument('eval_type', type=str)
 parser.add_argument('device', type=str)
+parser.add_argument("--optimize_sim_score", action='store_true', default=False)
+parser.add_argument("--debug", action='store_true', default=False)
 
 args = parser.parse_args()
+run = Run.get_context()
 real_data_path = args.data_path
 eval_type = args.eval_type
 train_size = args.train_size
 device = args.device
 assert eval_type in ('merged', 'synthetic')
+config_path = real_data_path.replace('data', 'exp')
+raw_config = lib.load_config(os.path.join(config_path, "config.toml"))
+
 
 def objective(trial):
     
@@ -59,6 +67,14 @@ def objective(trial):
         "random_dim": random_dim,
         "num_channels": num_channels
     }
+    
+    if args.debug:
+        train_params["epochs"] = 10
+        num_samples = 1000
+        train_params["batch_size"] = 32
+        steps = 100
+
+
     trial.set_user_attr("train_params", train_params)
     trial.set_user_attr("num_samples", num_samples)
 
@@ -72,7 +88,7 @@ def objective(trial):
             change_val=True,
             device=device
         )
-
+        sim_score = []
         for sample_seed in range(5):
             sample_ctabgan(
                 ctabgan,
@@ -102,9 +118,28 @@ def objective(trial):
                 change_val=True,
                 seed = 0
             )
+            sim_report = calculate_similarity_score(
+                parent_dir=dir_,
+                real_data_path=real_data_path,
+                eval_type=eval_type,
+                num_classes=raw_config['model_params']['num_classes'],
+                # is_y_cond=False,
+                T_dict=raw_config['eval']['T'],
+                seed=0,
+                change_val=True,
+                table_evaluate=False,
+            )
+            sim_score.append(sim_report['sim_score'])
 
             score += metrics.get_val_score()
-    return score / 5
+    for k, v in lib.average_per_key(sim_score).items():
+        run.log(k, v)
+    if args.optimize_sim_score:
+        print("optimizing for similarity score")
+        return lib.average_per_key(sim_score)['score-mean']
+    else:
+        print(f"optimizing for {args.eval_model} score")
+        return score / 5
 
 
 study = optuna.create_study(
@@ -112,7 +147,9 @@ study = optuna.create_study(
     sampler=optuna.samplers.TPESampler(seed=0),
 )
 
-study.optimize(objective, n_trials=35, show_progress_bar=True)
+n_trials = 50 if not args.debug else 10
+
+study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
 
 os.makedirs(f"exp/{Path(real_data_path).name}/ctabgan/", exist_ok=True)
 config = {
@@ -145,6 +182,7 @@ train_ctabgan(
 )
 
 lib.dump_config(config, config["parent_dir"]+"config.toml")
-
-subprocess.run(['python3.9', "scripts/eval_seeds.py", '--config', f'{config["parent_dir"]+"config.toml"}',
-                '10', "ctabgan", eval_type, "catboost", "5"], check=True)
+my_env = os.environ.copy()
+my_env["PYTHONPATH"] = os.getcwd() # Needed to run the subscripts
+subprocess.run([sys.executable, "scripts/eval_seeds.py", '--config', f'{config["parent_dir"]+"config.toml"}',
+                '10', "ctabgan", eval_type, "catboost", "5"], check=True, env=my_env)

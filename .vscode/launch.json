@@ -75,10 +75,10 @@
             ]
         },
         {
-            "name": "Tune TVAE",
+            "name": "Tune TVAE/CTABGAN",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/CTGAN/tune_tvae.py",
+            "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
             "env" : {
