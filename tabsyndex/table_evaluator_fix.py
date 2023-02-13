@@ -106,18 +106,14 @@ class TableEvaluatorFix(TableEvaluator):
         fig, ax = plt.subplots(nr_rows, nr_cols, figsize=(16, row_height * nr_rows))
         fig.suptitle('Distribution per feature', fontsize=16)
         axes = ax.flatten()
-        print("Going through columns")
         for i, col in enumerate(self.real.columns):
-            print("Column: ", col, " is cat: ", col in self.categorical_columns)
             if col not in self.categorical_columns:
-                
                 plot_df = pd.DataFrame({col: pd.concat([self.real[col], self.fake[col]]), 'kind': ['real'] * self.n_samples + ['fake'] * self.n_samples})
-                print("plot_df shape: ", plot_df.shape, " with cols: ", plot_df.columns, " and unique elements: ", plot_df.nunique())
+                
                 bins = "auto" if col not in NO_AUTO_BIN else "sturges"
                 fig = sns.histplot(plot_df, bins = bins, x=col, hue='kind', ax=axes[i], stat='probability', legend=True, kde=False)
-                print("fig done")
                 axes[i].set_autoscaley_on(True)
-                print("Autoscale done")
+
             else:
                 real = self.real.copy()
                 fake = self.fake.copy()
@@ -136,12 +132,9 @@ class TableEvaluatorFix(TableEvaluator):
                       .pipe((sns.barplot, "data"), x=x, y=y, hue=hue, ax=axes[i], saturation=0.8, palette=palette))
                 ax.set_xticklabels(axes[i].get_xticklabels(), rotation='vertical')
         plt.tight_layout(rect=[0, 0.02, 1, 0.98])
-        print("Finished all columns")
         if fname is not None: 
             plt.savefig(fname)
-        print("Saved and now show:")
         plt.show()
-        print("Show finished")
 
 def plot_correlation_difference(real: pd.DataFrame, fake: pd.DataFrame, plot_diff: bool = True, cat_cols: list = None, annot=False, fname=None):
         """

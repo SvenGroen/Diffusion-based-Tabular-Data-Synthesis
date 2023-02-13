@@ -149,8 +149,9 @@ study = optuna.create_study(
     direction='maximize',
     sampler=optuna.samplers.TPESampler(seed=0),
 )
+n_trials = 50 if not args.debug else 10
 
-study.optimize(objective, n_trials=50, show_progress_bar=True)
+study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
 
 os.makedirs(f"exp/{Path(real_data_path).name}/tvae/", exist_ok=True)
 config = {
