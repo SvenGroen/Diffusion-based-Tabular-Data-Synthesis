@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+from sklearn.decomposition import PCA
 from dython.nominal import compute_associations
 
 # in some cases, sns bins="auto" function takes forever to plot histograms for non-categorical data.
@@ -56,8 +57,44 @@ class TableEvaluatorFix(TableEvaluator):
         if fname is not None: 
             plt.savefig(fname)
 
-        plt.show()
+        plt.show(block=False)
     
+    def plot_pca(self, fname=None, compares_with_train=False):
+        """
+        Plot the first two components of a PCA of real and fake data.
+        :param fname: If not none, saves the plot with this file name.
+        """
+        real, fake = self.convert_numerical()
+
+        pca_r = PCA(n_components=2)
+        pca_f = PCA(n_components=2)
+
+        real_t = pca_r.fit_transform(real)
+        fake_t = pca_f.fit_transform(fake)
+
+        fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+        fig.suptitle('First two components of PCA', fontsize=16)
+        sns.scatterplot(ax=ax[0], x=real_t[:, 0], y=real_t[:, 1])
+        sns.scatterplot(ax=ax[1], x=fake_t[:, 0], y=fake_t[:, 1])
+        if not compares_with_train:
+            ax[0].set_title('Real data')
+            ax[1].set_title('Synthetic data')
+        else:
+            ax[0].set_title('Real Test data')
+            ax[1].set_title('Real Train data')
+
+        if fname is not None: 
+            plt.savefig(fname)
+        plt.show(block=False)
+
+    def plot_mean_std(self, fname=None):
+        """
+        Class wrapper function for plotting the mean and std using `viz.plot_mean_std`.
+        :param fname: If not none, saves the plot with this file name. 
+        """
+        plot_mean_std(self.real, self.fake, fname=fname)
+
+
     def visual_evaluation(self, save_dir=None, **kwargs):
         """
         Plot all visual evaluation metrics. Includes plotting the mean and standard deviation, cumulative sums, correlation differences and the PCA transform.
@@ -65,16 +102,16 @@ class TableEvaluatorFix(TableEvaluator):
         :param kwargs: any kwargs for matplotlib.
         """
         if save_dir is None: 
-            super().plot_mean_std()
+            self.plot_mean_std()
             self.plot_cumsums()
             self.plot_distributions()
             self.plot_correlation_difference(**kwargs)
-            super().plot_pca()    
+            self.plot_pca()    
         else: 
             save_dir = Path(save_dir)
             save_dir.mkdir(parents=True, exist_ok=True)
             print("Mean_std")
-            super().plot_mean_std(fname=save_dir/'mean_std.png')
+            self.plot_mean_std(fname=save_dir/'mean_std.png')
             print("Cumsums")
             self.plot_cumsums(fname=save_dir/'cumsums.png')
             print("Distributions")
@@ -82,7 +119,7 @@ class TableEvaluatorFix(TableEvaluator):
             print("Corr")
             self.plot_correlation_difference(fname=save_dir/'correlation_difference.png', **kwargs)
             print("PCA")
-            super().plot_pca(fname=save_dir/'pca.png') 
+            self.plot_pca(fname=save_dir/'pca.png', compares_with_train="real" in str(save_dir)) 
     
     def plot_distributions(self, nr_cols=3, fname=None):
         """
@@ -106,19 +143,24 @@ class TableEvaluatorFix(TableEvaluator):
         fig, ax = plt.subplots(nr_rows, nr_cols, figsize=(16, row_height * nr_rows))
         fig.suptitle('Distribution per feature', fontsize=16)
         axes = ax.flatten()
+        handles, labels = None, None
         for i, col in enumerate(self.real.columns):
             if col not in self.categorical_columns:
-                plot_df = pd.DataFrame({col: pd.concat([self.real[col], self.fake[col]]), 'kind': ['real'] * self.n_samples + ['fake'] * self.n_samples})
+                plot_df = pd.DataFrame({col: pd.concat([self.real[col], self.fake[col]]), 'kind': ['Synthetic'] * self.n_samples +  ['Real'] * self.n_samples})
                 
                 bins = "auto" if col not in NO_AUTO_BIN else "sturges"
-                fig = sns.histplot(plot_df, bins = bins, x=col, hue='kind', ax=axes[i], stat='probability', legend=True, kde=False)
+                fig = sns.histplot(plot_df, bins = bins, x=col, hue='kind',ax=axes[i], stat='probability', legend=True, kde=False)
                 axes[i].set_autoscaley_on(True)
+                if handles is None:
+                    axes[i].legend(['Real', 'Synthetic'], fancybox=False, title="kind")
+                else:
+                    axes[i].legend(handles, labels, title="kind")
 
             else:
                 real = self.real.copy()
                 fake = self.fake.copy()
                 real['kind'] = 'Real'
-                fake['kind'] = 'Fake'
+                fake['kind'] = 'Synthetic'
                 concat = pd.concat([fake, real])
                 palette = sns.color_palette(
                     [(0.8666666666666667, 0.5176470588235295, 0.3215686274509804),
@@ -131,10 +173,11 @@ class TableEvaluatorFix(TableEvaluator):
                       .reset_index()
                       .pipe((sns.barplot, "data"), x=x, y=y, hue=hue, ax=axes[i], saturation=0.8, palette=palette))
                 ax.set_xticklabels(axes[i].get_xticklabels(), rotation='vertical')
+                handles, labels = axes[i].get_legend_handles_labels()
         plt.tight_layout(rect=[0, 0.02, 1, 0.98])
         if fname is not None: 
             plt.savefig(fname)
-        plt.show()
+        plt.show(block=False)
 
 def plot_correlation_difference(real: pd.DataFrame, fake: pd.DataFrame, plot_diff: bool = True, cat_cols: list = None, annot=False, fname=None):
         """
@@ -188,7 +231,7 @@ def plot_correlation_difference(real: pd.DataFrame, fake: pd.DataFrame, plot_dif
             sns.heatmap(diff, ax=ax[2], cmap=cmap, vmax=.3, square=True, annot=annot, center=0,
                         linewidths=.5, cbar_kws={"shrink": .5}, fmt='.2f')
 
-        titles = ['Real', 'Fake', 'Difference'] if plot_diff else ['Real', 'Fake']
+        titles = ['Real', 'Synthetic', 'Difference'] if plot_diff else ['Real', 'Synthetic']
         for i, label in enumerate(titles):
             title_font = {'size': '18'}
             ax[i].set_title(label, **title_font)
@@ -197,7 +240,7 @@ def plot_correlation_difference(real: pd.DataFrame, fake: pd.DataFrame, plot_dif
         if fname is not None: 
             plt.savefig(fname)
 
-        plt.show()
+        plt.show(block=False)
 
 def cdf(data_r, data_f, xlabel: str = 'Values', ylabel: str = 'Cumulative Sum', ax=None):
     """
@@ -221,7 +264,7 @@ def cdf(data_r, data_f, xlabel: str = 'Values', ylabel: str = 'Cumulative Sum', 
 
     ax.grid()
     ax.plot(x1, y, marker='o', linestyle='none', label='Real', ms=8)
-    ax.plot(x2, y, marker='o', linestyle='none', label='Fake', alpha=0.5)
+    ax.plot(x2, y, marker='o', linestyle='none', label='Synthetic', alpha=0.5)
     ax.tick_params(axis='both', which='major', labelsize=8)
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1), ncol=3)
     import matplotlib.ticker as mticker
@@ -234,4 +277,54 @@ def cdf(data_r, data_f, xlabel: str = 'Values', ylabel: str = 'Cumulative Sum', 
         ax.set_xticklabels(data_r.sort_values().unique(), rotation='vertical')
 
     if ax is None:
-        plt.show()
+        plt.show(block=False)
+
+
+def plot_mean_std(real: pd.DataFrame, fake: pd.DataFrame, ax=None, fname=None):
+    """
+    Plot the means and standard deviations of each dataset.
+
+    :param real: DataFrame containing the real data
+    :param fake: DataFrame containing the fake data
+    :param ax: Axis to plot on. If none, a new figure is made.
+    :param fname: If not none, saves the plot with this file name. 
+    """
+    if ax is None:
+        fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+        fig.suptitle('Absolute Log Mean and STDs of numeric data\n', fontsize=16)
+
+    ax[0].grid(True)
+    ax[1].grid(True)
+    real = real._get_numeric_data()
+    fake = fake._get_numeric_data()
+    real_mean = np.log(np.add(abs(real.mean()).values, 1e-5))
+    fake_mean = np.log(np.add(abs(fake.mean()).values, 1e-5))
+    min_mean = min(real_mean) - 1
+    max_mean = max(real_mean) + 1
+    line = np.arange(min_mean, max_mean)
+    sns.lineplot(x=line, y=line, ax=ax[0])
+    sns.scatterplot(x=real_mean,
+                    y=fake_mean,
+                    ax=ax[0])
+    ax[0].set_title('Means of real and synthetic data')
+    ax[0].set_xlabel('real data mean (log)')
+    ax[0].set_ylabel('synthetic data mean (log)')
+
+    real_std = np.log(np.add(real.std().values, 1e-5))
+    fake_std = np.log(np.add(fake.std().values, 1e-5))
+    min_std = min(real_std) - 1
+    max_std = max(real_std) + 1
+    line = np.arange(min_std, max_std)
+    sns.lineplot(x=line, y=line, ax=ax[1])
+    sns.scatterplot(x=real_std,
+                    y=fake_std,
+                    ax=ax[1])
+    ax[1].set_title('Stds of real and synthetic data')
+    ax[1].set_xlabel('real data std (log)')
+    ax[1].set_ylabel('synthetic data std (log)')
+
+    if fname is not None:
+        plt.savefig(fname)
+
+    if ax is None:
+        plt.show(block=False)
