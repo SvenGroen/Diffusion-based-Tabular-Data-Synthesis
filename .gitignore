@@ -5,6 +5,7 @@ catboost_info/
 **/**.pt
 **/**.ipynb
 !agg_results.ipynb
+!*.ipynb
 **/**.npy
 **/**.gz
 **/**.sh
@@ -27,3 +28,4 @@ exps/
 secrets.json
 outputs/
 processor_state/
+*aml_checkpoints/
