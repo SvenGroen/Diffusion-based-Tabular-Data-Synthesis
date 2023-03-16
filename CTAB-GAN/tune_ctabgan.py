@@ -51,8 +51,8 @@ def objective(trial):
     d_layers = d_first + d_middle + d_last
     ####
 
-    steps = trial.suggest_categorical('steps', [1000, 5000, 10000])
-    # steps = trial.suggest_categorical('steps', [10])
+    # steps = trial.suggest_categorical('steps', [1000, 5000, 10000])
+    steps = trial.suggest_categorical('steps', [1000, 5000, 7500])
     batch_size = 2 ** trial.suggest_int('batch_size', 9, 11)
     random_dim = 2 ** trial.suggest_int('random_dim', 4, 7)
     num_channels = 2 ** trial.suggest_int('num_channels', 4, 6)
@@ -67,7 +67,10 @@ def objective(trial):
         "random_dim": random_dim,
         "num_channels": num_channels
     }
-    
+    print("Train params:")
+    for k,v in train_params.items():
+        print(k,": ",v)
+
     if args.debug:
         train_params["epochs"] = 10
         num_samples = 1000
@@ -147,7 +150,8 @@ study = optuna.create_study(
     sampler=optuna.samplers.TPESampler(seed=0),
 )
 
-n_trials = 50 if not args.debug else 10
+# n_trials = 50 if not args.debug else 10
+n_trials = 30 if not args.debug else 10
 
 study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
 
