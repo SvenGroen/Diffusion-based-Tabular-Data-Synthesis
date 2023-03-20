@@ -27,6 +27,7 @@ def main():
     base_path = json.load(open("secrets.json", "r"))["Experiment_Folder"]
 
     method2exp = {
+        "trash": "adult/21_12_2022-identity-50optuna-ts26048-catboost-tune-CatboostAndSimilarityEval-syntheticEval/outputs/exp/adult/ddpm_identity_best/final_eval/", # for some reason the plots look different in the first run
         "real": "adult/20_12_2022-REAL-BASELINE/outputs/exp/adult/ddpm_real/final_eval/",
         "tab-ddpm": "adult/21_12_2022-identity-50optuna-ts26048-catboost-tune-CatboostAndSimilarityEval-syntheticEval/outputs/exp/adult/ddpm_identity_best/final_eval/",
         "tab-ddpm-bgm": "adult/20_12_2022-bgm-50optuna-ts26048-catboost-tune-CatboostAndSimilarityEval-syntheticEval/outputs/exp/adult/ddpm_bgm_best/final_eval/",
@@ -67,7 +68,7 @@ def main():
                     save_dir=out
                     )
         i += 1
-        # if i ==1:
+        # if i==4:
         #     break
 
 def produce_plots(    
@@ -140,10 +141,10 @@ def produce_plots(
         df_train[target_col] = df_train[target_col].astype(float)
 
     print("SEED: ", seed)
-    if len(df_test) > len(df_train):
-        df_test = df_test.sample(n=len(df_train), random_state=seed)
-    elif len(df_train) > len(df_test):
-        df_train = df_train.sample(n=len(df_test), random_state=seed)
+    # if len(df_test) > len(df_train):
+    #     df_test = df_test.sample(n=len(df_train), random_state=seed)
+    # elif len(df_train) > len(df_test):
+    #     df_train = df_train.sample(n=len(df_test), random_state=seed)
 
     te = TableEvaluator(df_test, df_train, cat_cols=train_transform.config["dataset_config"]["cat_columns"])
     save_dir = os.path.join(save_dir, "plots")

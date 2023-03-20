@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from table_evaluator import TableEvaluator
 import pandas as pd
@@ -6,14 +7,20 @@ import seaborn as sns
 import numpy as np
 from sklearn.decomposition import PCA
 from dython.nominal import compute_associations
+from collections import defaultdict
 
 # in some cases, sns bins="auto" function takes forever to plot histograms for non-categorical data.
 # in that case, use the "sturges" bins function (see plot_distributions())
 NO_AUTO_BIN =["capital-gain", "capital-loss"]
 
+
 class TableEvaluatorFix(TableEvaluator):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.dist_dict = {"bins": defaultdict(lambda:None),
+                          "xlim": defaultdict(lambda:None),
+                          "ylim": defaultdict(lambda:None)
+                          }
 
     def plot_correlation_difference(self, plot_diff=True, fname=None, **kwargs):
         """
@@ -26,7 +33,7 @@ class TableEvaluatorFix(TableEvaluator):
         plot_correlation_difference(self.real, self.fake, cat_cols=self.categorical_columns, plot_diff=plot_diff, fname=fname,
                                     **kwargs)
 
-    def plot_cumsums(self, nr_cols=4, fname=None):
+    def plot_cumsums(self, nr_cols=3, fname=None):
         """
         Plot the cumulative sums for all columns in the real and fake dataset. Height of each row scales with the length of the labels. Each plot contains the
         values of a real columns and the corresponding fake column.
@@ -94,13 +101,13 @@ class TableEvaluatorFix(TableEvaluator):
         """
         plot_mean_std(self.real, self.fake, fname=fname)
 
-
     def visual_evaluation(self, save_dir=None, **kwargs):
         """
         Plot all visual evaluation metrics. Includes plotting the mean and standard deviation, cumulative sums, correlation differences and the PCA transform.
         :save_dir: directory path to save images 
         :param kwargs: any kwargs for matplotlib.
         """
+
         if save_dir is None: 
             self.plot_mean_std()
             self.plot_cumsums()
@@ -115,7 +122,7 @@ class TableEvaluatorFix(TableEvaluator):
             print("Cumsums")
             self.plot_cumsums(fname=save_dir/'cumsums.png')
             print("Distributions")
-            self.plot_distributions(fname=save_dir/'distributions.png')
+            self.plot_distributions(fname=save_dir/'distributions.png', **kwargs)
             print("Corr")
             self.plot_correlation_difference(fname=save_dir/'correlation_difference.png', **kwargs)
             print("PCA")
@@ -143,19 +150,27 @@ class TableEvaluatorFix(TableEvaluator):
         fig, ax = plt.subplots(nr_rows, nr_cols, figsize=(16, row_height * nr_rows))
         fig.suptitle('Distribution per feature', fontsize=16)
         axes = ax.flatten()
-        handles, labels = None, None
+        palette = sns.color_palette(
+                    [(0.8666666666666667, 0.5176470588235295, 0.3215686274509804),
+                     (0.2980392156862745, 0.4470588235294118, 0.6901960784313725)])
         for i, col in enumerate(self.real.columns):
             if col not in self.categorical_columns:
-                plot_df = pd.DataFrame({col: pd.concat([self.real[col], self.fake[col]]), 'kind': ['Synthetic'] * self.n_samples +  ['Real'] * self.n_samples})
-                
-                bins = "auto" if col not in NO_AUTO_BIN else "sturges"
-                fig = sns.histplot(plot_df, bins = bins, x=col, hue='kind',ax=axes[i], stat='probability', legend=True, kde=False)
-                axes[i].set_autoscaley_on(True)
-                if handles is None:
-                    axes[i].legend(['Real', 'Synthetic'], fancybox=False, title="kind")
+                if self.dist_dict["bins"][col] is None:
+                    bins = "auto" if col not in NO_AUTO_BIN else "sturges"
+                    bins = np.histogram_bin_edges(self.real[col].to_numpy(), bins=bins)
+                    self.dist_dict["bins"][col] = bins
                 else:
-                    axes[i].legend(handles, labels, title="kind")
+                    bins = self.dist_dict["bins"][col]
+                fig = sns.histplot(self.real[col], bins = bins, color=palette[0],ax=axes[i], stat='probability', legend=True, kde=False, edgecolor = "white", alpha= 0.5) #, edgecolor = "white", palette=palette
+                fig2 = sns.histplot(self.fake[col], bins = bins, color=palette[1],ax=axes[i], stat='probability', legend=True, kde=False,edgecolor = "white", alpha= 0.5) #, edgecolor = "white", palette=palette
+                if self.dist_dict["xlim"][col] is None:
+                    axes[i].set_autoscaley_on(True)
+                    self.dist_dict["xlim"][col] = axes[i].get_xlim()
+                else:
+                    axes[i].set_xlim(self.dist_dict["xlim"][col])
 
+                # legend should start with "real"
+                axes[i].legend(labels=['Real', 'Synthetic'], title="kind")
             else:
                 real = self.real.copy()
                 fake = self.fake.copy()
@@ -173,12 +188,14 @@ class TableEvaluatorFix(TableEvaluator):
                       .reset_index()
                       .pipe((sns.barplot, "data"), x=x, y=y, hue=hue, ax=axes[i], saturation=0.8, palette=palette))
                 ax.set_xticklabels(axes[i].get_xticklabels(), rotation='vertical')
-                handles, labels = axes[i].get_legend_handles_labels()
+
         plt.tight_layout(rect=[0, 0.02, 1, 0.98])
         if fname is not None: 
             plt.savefig(fname)
         plt.show(block=False)
 
+
+      
 def plot_correlation_difference(real: pd.DataFrame, fake: pd.DataFrame, plot_diff: bool = True, cat_cols: list = None, annot=False, fname=None):
         """
         Plot the association matrices for the `real` dataframe, `fake` dataframe and plot the difference between them. Has support for continuous and Categorical
