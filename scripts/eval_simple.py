@@ -1,3 +1,6 @@
+''' This have not been changed despite some comments and documentation. If errors occur, please compare it with eval_catboost.py to find possible solutions.'''
+
+
 import numpy as np
 import os
 from sklearn.utils import shuffle
@@ -23,6 +26,50 @@ def train_simple(
     params = None, # dummy
     device = None # dummy
 ):
+    """
+    Train a simple model on real or synthetic data and evaluate its performance.
+
+    if dataset is a regression dataset, the following models can be used:
+        models = {
+            "tree": DecisionTreeRegressor(max_depth=28, random_state=seed),
+            "rf": RandomForestRegressor(max_depth=28, random_state=seed),
+            "lr": Ridge(max_iter=500, random_state=seed),
+            "mlp": MLPRegressor(max_iter=100, random_state=seed)
+        }
+    else if the dataset is a classification dataset, the following models can be used:
+        models = {
+            "tree": DecisionTreeClassifier(max_depth=28, random_state=seed),
+            "rf": RandomForestClassifier(max_depth=28, random_state=seed),
+            "lr": LogisticRegression(max_iter=500, n_jobs=2, random_state=seed),
+            "mlp": MLPClassifier(max_iter=100, random_state=seed)
+        }
+
+    Parameters
+    ----------
+    parent_dir : str
+        The parent directory path.
+    real_data_path : str
+        The path to the real data.
+    eval_type : str
+        The evaluation type, either "real", "synthetic", or "merged".
+    T_dict : dict
+        The dictionary containing transformation settings.
+    model_name : str, optional
+        The name of the model to be trained. Default is "tree".
+    seed : int, optional
+        The random seed for reproducibility. Default is 0.
+    change_val : bool, optional
+        Whether to change the validation dataset. Default is True.
+    params : None, optional
+        Dummy parameter, not used in the function. Default is None.
+    device : None, optional
+        Dummy parameter, not used in the function. Default is None.
+
+    Returns
+    -------
+    metrics_report : lib.MetricsReport
+        The report containing evaluation metrics for the trained model.
+    """
     zero.improve_reproducibility(seed)
     if eval_type != "real":
         synthetic_data_path = os.path.join(parent_dir)
@@ -35,6 +82,8 @@ def train_simple(
     if change_val:
         X_num_real, X_cat_real, y_real, X_num_val, X_cat_val, y_val = read_changed_val(real_data_path, val_size=0.2)
 
+    if not os.path.isdir('outputs'):
+        os.mkdir('outputs')
     X = None
     print('-'*100)
     if eval_type == 'merged':
@@ -42,30 +91,6 @@ def train_simple(
         if not change_val:
             X_num_real, X_cat_real, y_real = read_pure_data(real_data_path)
         X_num_fake, X_cat_fake, y_fake = read_pure_data(synthetic_data_path)
-
-        import pandas as pd
-        if not os.path.isdir('outputs'):
-            os.mkdir('outputs')
-        print("Shapes: ")
-        print(X_num_fake.shape,X_cat_fake.shape,y_fake.shape)
-        total_syn = np.concatenate([X_num_fake, X_cat_fake, np.expand_dims(y_fake,axis=-1)], axis=-1)
-        df = pd.DataFrame(total_syn, columns =["0","1","2","3","4","5","6","7","8","9","10","11","12","13","y"])
-        df.to_csv('outputs/output_syn.csv', index=False)
-
-        total_real = np.concatenate([X_num_real, X_cat_real,np.expand_dims(y_real,axis=-1) ], axis=-1)
-        df = pd.DataFrame(total_real, columns =["0","1","2","3","4","5","6","7","8","9","10","11","12","13","y"])
-        df.to_csv('outputs/output_real.csv', index=False)
-
-        print("SAVED DATAFRAMES")
-        ###
-        # dists = privacy_metrics(real_data_path, synthetic_data_path)
-        # bad_fakes = dists.argsort()[:int(0.25 * len(y_fake))]
-        # X_num_fake = np.delete(X_num_fake, bad_fakes, axis=0)
-        # X_cat_fake = np.delete(X_cat_fake, bad_fakes, axis=0) if X_cat_fake is not None else None
-        # y_fake = np.delete(y_fake, bad_fakes, axis=0)
-        ###
-
-        y = np.concatenate([y_real, y_fake], axis=0)
 
         X_num = None
         if X_num_real is not None:

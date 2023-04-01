@@ -1,6 +1,9 @@
 """
 Adapted from https://github.com/Team-TUD/CTAB-GAN/tree/main/model/eval
 """
+'''
+reamined untouched, might not be compatible anymore. Not tested yet.
+'''
 
 import argparse
 import lib

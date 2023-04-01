@@ -25,7 +25,7 @@ SUPPORTED_PROCESSORS = {
     "ft": FTProcessor
     }
 
-class TabularTransformer:
+class TabularDataController:
     def __init__(self, data_path: Union[str, Path], processor_type: str, num_classes: int = 2, splits: list[str] = ["train","val", "test"], **kwargs):
         self.data_path = data_path if isinstance(data_path, Path) else Path(data_path)
         self.config = json.load(open(self.data_path / "info.json"))

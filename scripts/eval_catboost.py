@@ -19,30 +19,58 @@ def train_catboost(
     change_val = True,
     device = None # dummy
 ):
+    """
+    Train a CatBoost model on real and/or synthetic data.
+
+    This function trains a CatBoost model on either real data, synthetic data, or a combination of both. The data is loaded, preprocessed, and concatenated before training the CatBoost model. The function also computes and returns evaluation metrics for the trained model.
+
+    Parameters
+    ----------
+    parent_dir : str
+        Parent directory containing the synthetic data.
+    real_data_path : str
+        Path to the real data.
+    eval_type : str
+        Evaluation type: 'real', 'synthetic', or 'merged'.
+    T_dict : dict
+        Dictionary of transformations.
+    seed : int, optional, default=0
+        Seed for reproducibility.
+    params : dict, optional, default=None
+        Dictionary of CatBoost configuration parameters. If None, the function retrieves the CatBoost configuration from the real_data_path.
+    change_val : bool, optional, default=True
+        If True, changes the validation dataset.
+    device : str, optional, default=None
+        Device for training the model. This parameter is a dummy and does not affect the training.
+
+    Returns
+    -------
+    lib.MetricsReport
+        Metrics report containing evaluation metrics for the trained model.
+    """
+    # set seed
     zero.improve_reproducibility(seed)
+
+    # load data and transformations
     if eval_type != "real":
         synthetic_data_path = os.path.join(parent_dir)
     info = lib.load_json(os.path.join(real_data_path, 'info.json'))
+    # load transformations
     T = lib.Transformations(**T_dict)
     
+    # change validation set if needed
     if change_val:
         X_num_real, X_cat_real, y_real, X_num_val, X_cat_val, y_val = read_changed_val(real_data_path, val_size=0.2)
 
     X = None
     print('-'*100)
+
+    # merged data: will merge real and synthetic data
     if eval_type == 'merged':
         print('loading merged data...')
         if not change_val:
             X_num_real, X_cat_real, y_real = read_pure_data(real_data_path)
         X_num_fake, X_cat_fake, y_fake = read_pure_data(synthetic_data_path)
-
-        ###
-        # dists = privacy_metrics(real_data_path, synthetic_data_path)
-        # bad_fakes = dists.argsort()[:int(0.25 * len(y_fake))]
-        # X_num_fake = np.delete(X_num_fake, bad_fakes, axis=0)
-        # X_cat_fake = np.delete(X_cat_fake, bad_fakes, axis=0) if X_cat_fake is not None else None
-        # y_fake = np.delete(y_fake, bad_fakes, axis=0)
-        ###
 
         y = np.concatenate([y_real, y_fake], axis=0)
 
@@ -54,10 +82,12 @@ def train_catboost(
         if X_cat_real is not None:
             X_cat = np.concatenate([X_cat_real, X_cat_fake], axis=0)
 
+    # synthetic data: will only use synthetic data
     elif eval_type == 'synthetic':
         print(f'loading synthetic data: {parent_dir}')
         X_num, X_cat, y = read_pure_data(synthetic_data_path)
 
+    # real data: will only use real data
     elif eval_type == 'real':
         print('loading real data...')
         if not change_val:
@@ -65,10 +95,12 @@ def train_catboost(
     else:
         raise "Choose eval method"
 
+    # load validation and test data
     if not change_val:
         X_num_val, X_cat_val, y_val = read_pure_data(real_data_path, 'val')
     X_num_test, X_cat_test, y_test = read_pure_data(real_data_path, 'test')
 
+    # create dataset
     D = lib.Dataset(
         {'train': X_num, 'val': X_num_val, 'test': X_num_test} if X_num is not None else None,
         {'train': X_cat, 'val': X_cat_val, 'test': X_cat_test} if X_cat is not None else None,
@@ -78,10 +110,12 @@ def train_catboost(
         info.get('n_classes')
     )
 
+    # apply transformations
     D = lib.transform_dataset(D, T, None)
     X = concat_features(D)
     print(f'Train size: {X["train"].shape}, Val size {X["val"].shape}')
 
+    # Catboost configuration
     if params is None:
         catboost_config = get_catboost_config(real_data_path, is_cv=True)
     else:
@@ -100,6 +134,7 @@ def train_catboost(
     pprint(catboost_config, width=100)
     print('-'*100)
     
+    # model creation
     if D.is_regression:
         model = CatBoostRegressor(
             **catboost_config,
@@ -121,81 +156,28 @@ def train_catboost(
             else lambda x: model.predict_proba(x)[:, 1]
         )
 
+    # train model
     model.fit(
         X['train'], D.y['train'],
         eval_set=(X['val'], D.y['val']),
         verbose=100
     )
-    # ---- added ----     
-    # import numpy as np
-    # print(f"Sampling finished for seed {seed}")
-    # print(f" x_num shape: {X['train'].shape} \t y_gen shape: {D.y['train'].shape}\t")
-    # try:
-    #     total = np.concatenate((X['train'],  np.expand_dims(D.y['train'],-1)), axis=-1)
-    #     import pandas as pd
-    #     df = pd.DataFrame(total, columns =["0","1","2","3","4","5","6","7","8","9","10","11","12","13","y"])
-    #     if not os.path.isdir('outputs'):
-    #         os.mkdir('outputs')
-    #     df.to_csv(f'outputs/output_syn{seed}.csv', index=False)
-    # except Exception as e:
-    #     print("Could not save synthetic dataset. Error:")
-    #     print(e)
-
     
-    # print('trying to load real data...')
-
-    # X_num_r, X_cat_r, y_r = read_pure_data(real_data_path)
-    # X_num_test_r, X_cat_test_r, y_test_r = read_pure_data(real_data_path, 'test')
-    # D_r = lib.Dataset(
-    # {'train': X_num_r, 'val': X_num_val, 'test': X_num_test_r} if X_num_r is not None else None,
-    # {'train': X_cat_r, 'val': X_cat_val, 'test': X_cat_test_r} if X_cat_r is not None else None,
-    # {'train': y_r, 'val': y_val, 'test': y_test_r},
-    # {},
-    # lib.TaskType(info['task_type']),
-    # info.get('n_classes')
-    # )
-    # D_r = lib.transform_dataset(D_r, T, None)
-    # X_r = concat_features(D_r)
-
-    # print(f" x_num shape: {X_r['train'].shape} \t y_gen shape: {D_r.y['train'].shape}\t")
-    # try:
-    #     total = np.concatenate((X_r['train'],  np.expand_dims(D_r.y['train'],-1)), axis=-1)
-    #     import pandas as pd
-    #     df = pd.DataFrame(total, columns =["0","1","2","3","4","5","6","7","8","9","10","11","12","13","y"])
-    #     if not os.path.isdir('outputs'):
-    #         os.mkdir('outputs')
-    #     df.to_csv(f'outputs/output_r{seed}.csv', index=False)
-    # except Exception as e:
-    #     print("Could not save real dataset. Error:")
-    #     print(e)
-    # ---- ---- ----
-
-    # from tabsyndex.tabsyndex import tabsyndex
-    # real = np.concatenate((X['test'],  np.expand_dims(D.y['test'],-1)), axis=-1)
-    # fake = np.concatenate((X['train'],  np.expand_dims(D.y['train'],-1)), axis=-1)
-    # import pandas as pd
-    # df_real = pd.DataFrame(fake, columns =["0","1","2","3","4","5","6","7","8","9","10","11","12","13","y"], dtype=float)
-    # df_fake = pd.DataFrame(fake, columns =["0","1","2","3","4","5","6","7","8","9","10","11","12","13","y"],dtype=float)  
-    # # make sure they have the same length:
-    # if len(df_real) > len(df_fake):
-    #     df_real = df_real[:len(df_fake)]
-    # else:
-    #     df_fake = df_fake[:len(df_real)]
-
-    # result = tabsyndex(df_real, df_fake, cat_cols=["6","7","8","9","10","11","12","13"], target_type="class")
-
-
+    # make predictions
     predictions = {k: predict(v) for k, v in X.items()}
     print(predictions['train'].shape)
 
+    # evaluate model
     report = {}
     report['eval_type'] = eval_type
     report['dataset'] = real_data_path
     report['metrics'] = D.calculate_metrics(predictions,  None if D.is_regression else 'probs')
 
     metrics_report = lib.MetricsReport(report['metrics'], D.task_type)
+    # print evaluation results
     metrics_report.print_metrics()
 
+    # save evaluation results
     if parent_dir is not None:
         lib.dump_json(report, os.path.join(parent_dir, "results_catboost.json"))
 

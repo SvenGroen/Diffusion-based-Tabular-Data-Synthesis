@@ -18,10 +18,33 @@ import torch
 
 
 def load_config(path) :
+    """
+    Load the TOML configuration file.
+
+    Parameters
+    ----------
+    path : str
+        Path to the configuration file.
+
+    Returns
+    -------
+    dict
+        The loaded configuration as a dictionary.
+    """
     with open(path, 'rb') as f:
         return tomli.load(f)
     
 def save_file(parent_dir, config_path):
+    """
+    Save the configuration file in the parent directory.
+
+    Parameters
+    ----------
+    parent_dir : str
+        The parent directory where the configuration file will be saved.
+    config_path : str
+        The path of the configuration file.
+    """
     try:
         dst = os.path.join(parent_dir)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
@@ -30,6 +53,25 @@ def save_file(parent_dir, config_path):
         pass
 
 def main():
+    """
+    Main function to execute training, sampling, and evaluation.
+
+    Parses command-line arguments, loads configuration, and calls appropriate functions based on the arguments.
+
+    Command-line Arguments
+    ----------------------
+    --config FILE : str
+        Path to the TOML configuration file.
+    --train : bool, optional
+        If specified, executes the training process.
+    --sample : bool, optional
+        If specified, executes the sampling process.
+    --eval : bool, optional
+        If specified, executes the evaluation process.
+    --change_val : bool, optional
+        If specified, changes the validation set used during training.
+
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', metavar='FILE')
     parser.add_argument('--train', action='store_true', default=False)
@@ -42,6 +84,7 @@ def main():
 
     raw_config = lib.load_config(args.config)
 
+    # for debugging, change raw_config["device"] to "cuda:0" if you want to use GPU
     if not RUNS_IN_CLOUD:
         # for debugging
         raw_config["diffusion_params"]["num_timesteps"] = 10

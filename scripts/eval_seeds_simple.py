@@ -1,3 +1,5 @@
+''' This have not been changed despite some comments and documentation. If errors occur, please compare it with eval_seeds.py to find possible solutions.'''
+
 import argparse
 import subprocess
 import tempfile
@@ -10,6 +12,7 @@ from eval_simple import train_simple
 from copy import deepcopy
 import shutil
 
+# location of supported sampling methods and their pipeline scripts
 pipeline = {
     'ddpm': 'scripts/pipeline.py',
     'smote': 'smote/pipeline_smote.py',
@@ -29,6 +32,38 @@ def eval_seeds(
     dump=True,
     change_val=False
 ):
+    """
+    Evaluate various models on real and/or synthetic data using different seeds.
+
+    This function evaluates various models (tree, linear regression, random forest, and MLP) on real data, synthetic data, or a combination of both. 
+    It trains and evaluates the models for a given number of seeds and calculates the mean and standard deviation of the evaluation metrics. 
+    The function also saves the evaluation results to a JSON file.
+
+    Parameters
+    ----------
+    raw_config : dict
+        Configuration dictionary containing paths, sampling method, and other settings.
+    n_seeds : int
+        Number of seeds for training and evaluation.
+    eval_type : str
+        Evaluation type: 'real', 'synthetic', or 'merged'.
+    sampling_method : str, optional, default="ddpm"
+        Sampling method to generate synthetic data: "ddpm", "smote", "ctabgan", "ctabgan-plus", or "tvae".
+    model_type : str, optional, default="simple"
+        Model type for evaluation: "simple" or "catboost".
+    n_datasets : int, optional, default=1
+        Number of datasets to sample from.
+    dump : bool, optional, default=True
+        If True, saves the evaluation results to a JSON file.
+    change_val : bool, optional, default=False
+        If True, changes the validation dataset.
+
+    Returns
+    -------
+    dict
+        Dictionary containing the evaluation results for each model and metric.
+    """
+
     parent_dir = Path(raw_config["parent_dir"])
     models = ["tree", "lr", "rf", "mlp"]
     metrics_seeds_report = {
@@ -46,6 +81,8 @@ def eval_seeds(
     with tempfile.TemporaryDirectory() as dir_:
         dir_ = Path(dir_)
         temp_config["parent_dir"] = str(dir_)
+
+        # copy model file to temp dir
         if sampling_method == "ddpm":
             shutil.copy2(parent_dir / "model.pt", temp_config["parent_dir"])
         elif sampling_method in ["ctabgan", "ctabgan-plus"]:
@@ -53,6 +90,7 @@ def eval_seeds(
         elif sampling_method == "tvae":
             shutil.copy2(parent_dir / "tvae.obj", temp_config["parent_dir"])
 
+        # sample data and train models
         for sample_seed in range(n_datasets):
             temp_config['sample']['seed'] = sample_seed
             lib.dump_config(temp_config, dir_ / "config.toml")

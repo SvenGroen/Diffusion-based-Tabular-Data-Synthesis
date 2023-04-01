@@ -4,7 +4,7 @@ import zero
 import os
 from tab_ddpm.gaussian_multinomial_diffsuion import GaussianMultinomialDiffusion
 from tab_ddpm.utils import FoundNANsError
-from tabular_processing.tabular_transformer import TabularTransformer
+from tabular_processing.tabular_data_controller import TabularDataController
 from utils_train import get_model, make_dataset
 from lib import round_columns
 import lib
@@ -37,27 +37,71 @@ def sample(
     change_val = False,
     processor_type = None
 ):
+    """
+    Generate synthetic tabular data from a pre-trained model using Gaussian-Multinomial Diffusion.
+
+    The function generates synthetic samples from a pre-trained model and saves the generated data to
+    an output directory. It uses Gaussian-Multinomial Diffusion to sample the data and handles
+    numerical and categorical features separately, performing necessary preprocessing and inverse
+    transformations. The function also supports generating data with class disbalance.
+
+    Parameters
+    ----------
+    parent_dir : str
+        The directory where generated data will be saved.
+    real_data_path : str, optional
+        The path to the real dataset, defaults to 'data/higgs-small'.
+    batch_size : int, optional
+        The batch size for data generation, defaults to 2000.
+    num_samples : int, optional
+        The number of samples to generate, defaults to 0.
+    model_type : str, optional
+        The type of the model, defaults to 'mlp'. Options: ["resnet", "mlp"]
+    model_params : dict, optional
+        The parameters of the model, defaults to None.
+    model_path : str, optional
+        The path to the pre-trained model, defaults to None.
+    num_timesteps : int, optional
+        The number of timesteps for the diffusion process, defaults to 1000.
+    gaussian_loss_type : str, optional
+        The type of Gaussian loss, defaults to 'mse'. Options: ["mse", "kl"]
+    scheduler : str, optional
+        The scheduler for the diffusion process, defaults to 'cosine'. Options: ["linear", "cosine"]
+    T_dict : dict, optional
+        The transformations dictionary, defaults to None.
+    num_numerical_features : int, optional
+        The number of numerical features in the dataset, defaults to 0.
+    disbalance : str, optional
+        The disbalance mode, can be 'fix' or 'fill', defaults to None.
+    device : torch.device, optional
+        The device to run the function on, defaults to 'cuda:1'.
+    seed : int, optional
+        The random seed, defaults to 0.
+    change_val : bool, optional
+        Whether to change the validation set or not, defaults to False.
+    processor_type : str, optional
+        The type of the data processor, defaults to None.
+
+    Returns
+    -------
+    None
+        This function does not return any value. It saves the generated data to the output directory.
+    """
     zero.improve_reproducibility(seed)
 
-    # add special processing
-
-    # tabular_Transformer = TabularTransformer(
-    # real_data_path, 
-    # processor_type,
-    # num_classes=model_params['num_classes'],
-    # is_y_cond=model_params['is_y_cond'])
-    # tabular_Transformer.transform()
-    # real_data_path = tabular_Transformer.save_data()
-    tabular_Transformer = TabularTransformer(
+    # add TabularDataController to revert transform synthetic sampled data at the end
+    tabular_Transformer = TabularDataController(
         real_data_path, 
         processor_type,
         num_classes=model_params['num_classes'],
         is_y_cond=model_params['is_y_cond'])
+    
     # also transform because information from transformation process might be needed
+    # will be reloaded if TabularProcessor is already saved
     tabular_Transformer.fit_transform(reload = True, save_processor = True) 
     real_data_path = os.path.join(real_data_path, processor_type)
 
-
+    # create dataset and load transformations
     T = lib.Transformations(**T_dict)
     D = make_dataset(
         real_data_path,
@@ -75,6 +119,7 @@ def sample(
     num_numerical_features_ = D.X_num['train'].shape[1] if D.X_num is not None else 0
     d_in = np.sum(K) + num_numerical_features_
     model_params['d_in'] = int(d_in)
+    # get model
     model = get_model(
         model_type,
         model_params,
@@ -82,6 +127,7 @@ def sample(
         category_sizes=D.get_category_sizes('train')
     )
 
+    # load model state
     try:
         model.load_state_dict(
             torch.load(model_path, map_location="cpu")
@@ -91,7 +137,7 @@ def sample(
         print('-------->Model not found<--------')
         
 
-
+    # load diffusion process
     diffusion = GaussianMultinomialDiffusion(
         K,
         num_numerical_features=num_numerical_features_,
@@ -129,31 +175,10 @@ def sample(
         x_gen, y_gen = diffusion.sample_all(num_samples, batch_size, empirical_class_dist.float(), ddim=False)
 
 
-    # try:
-    # except FoundNANsError as ex:
-    #     print("Found NaNs during sampling!")
-    #     loader = lib.prepare_fast_dataloader(D, 'train', 8)
-    #     x_gen = next(loader)[0]
-    #     y_gen = torch.multinomial(
-    #         empirical_class_dist.float(),
-    #         num_samples=8,
-    #         replacement=True
-    #     )
-
-
     X_gen, y_gen = x_gen.numpy(), y_gen.numpy()
     X_cat, X_num = None, None
-    ###
-    # X_num_unnorm = X_gen[:, :num_numerical_features]
-    # lo = np.percentile(X_num_unnorm, 2.5, axis=0)
-    # hi = np.percentile(X_num_unnorm, 97.5, axis=0)
-    # idx = (lo < X_num_unnorm) & (hi > X_num_unnorm)
-    # X_gen = X_gen[np.all(idx, axis=1)]
-    # y_gen = y_gen[np.all(idx, axis=1)]
-    ###
-    # Inverse Normalization
-    # num_numerical_features = num_numerical_features + int(D.is_regression and not model_params["is_y_cond"])
-    # num_numerical_features = num_numerical_features_ + int(D.is_regression and not model_params["is_y_cond"])  # CHANGED FROM: num_numerical_features  (_ after num_numerical_features)
+    
+    # Reverse the "standard" preprocessing transformations
     num_numerical_features = tabular_Transformer.dim_info["transformed"]["num_dim"] + int(D.is_regression and not model_params["is_y_cond"])
      
     X_num_ = X_gen
@@ -184,8 +209,7 @@ def sample(
         if len(disc_cols):
             X_num = round_columns(X_num_real, X_num, disc_cols)
 
-    # Inverse special processing
-    
+    # Inverse TabularProcessing transformations
     X_cat, X_num, y_gen = tabular_Transformer.inverse_transform(X_cat, X_num, y_gen) 
 
     # Save for Evaluation

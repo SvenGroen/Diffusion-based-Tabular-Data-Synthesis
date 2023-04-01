@@ -8,7 +8,7 @@ from utils_train import get_model, make_dataset, update_ema
 import lib
 import pandas as pd
 from azureml.core import Run
-from tabular_processing.tabular_transformer import TabularTransformer
+from tabular_processing.tabular_data_controller import TabularDataController
 
 class Trainer:
     def __init__(self, diffusion, train_iter, lr, weight_decay, steps, device=torch.device('cuda:1')):
@@ -105,7 +105,7 @@ def train(
 
     # add special processing
 
-    tabular_Transformer = TabularTransformer(
+    tabular_Transformer = TabularDataController(
         real_data_path, 
         processor_type,
         num_classes=model_params['num_classes'],

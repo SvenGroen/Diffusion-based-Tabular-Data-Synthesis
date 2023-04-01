@@ -1,3 +1,10 @@
+''' 
+This script loads multiple experiment results and generates plots for each method.
+It can be used to create plots after all experiments have been executed by loading the respective synthetic data and real data from the experiment folders.
+The plots are saved in a designated output directory.
+'''
+
+
 from catboost import CatBoostClassifier, CatBoostRegressor
 from sklearn.metrics import classification_report, r2_score
 import numpy as np
@@ -13,7 +20,7 @@ from lib import concat_features, read_pure_data, get_catboost_config, read_chang
 from tabular_processing.tabular_processor import TabularProcessor
 import json
 from tabsyndex.tabsyndex import tabsyndex
-from tabular_processing.tabular_transformer import TabularTransformer
+from tabular_processing.tabular_data_controller import TabularDataController
 import time
 import os
 import lib
@@ -24,10 +31,18 @@ from pathlib import Path
 
 
 def main():
+    """
+    Executes the main script to produce plots for different methods in a comparative analysis.
+    
+    This script loads multiple experiment results, applies transformations to the data, and generates plots for each method. 
+    The plots are saved in a designated output directory.
+    """
     base_path = json.load(open("secrets.json", "r"))["Experiment_Folder"]
 
+    # Define the output directory of the experiments for the different models.
+    # Todo: Rename the output directories
     method2exp = {
-        "trash": "adult/21_12_2022-identity-50optuna-ts26048-catboost-tune-CatboostAndSimilarityEval-syntheticEval/outputs/exp/adult/ddpm_identity_best/final_eval/", # for some reason the plots look different in the first run
+        "trash": "adult/21_12_2022-identity-50optuna-ts26048-catboost-tune-CatboostAndSimilarityEval-syntheticEval/outputs/exp/adult/ddpm_identity_best/final_eval/", # for some reason the plots did look different in the first run, should be fixed for continouse columns but not for categorical columns yet.
         "real": "adult/20_12_2022-REAL-BASELINE/outputs/exp/adult/ddpm_real/final_eval/",
         "tab-ddpm": "adult/21_12_2022-identity-50optuna-ts26048-catboost-tune-CatboostAndSimilarityEval-syntheticEval/outputs/exp/adult/ddpm_identity_best/final_eval/",
         "tab-ddpm-bgm": "adult/20_12_2022-bgm-50optuna-ts26048-catboost-tune-CatboostAndSimilarityEval-syntheticEval/outputs/exp/adult/ddpm_bgm_best/final_eval/",
@@ -51,6 +66,7 @@ def main():
     out_dir.mkdir(exist_ok=True, parents=True)
 
     i=0
+    # for name, path create plots for each method
     for name, path in method2exp.items():
         raw_config = lib.load_config(path / "config.toml")
         out = out_dir / name
@@ -80,6 +96,29 @@ def produce_plots(
     num_classes = 2,
     save_dir = None,
     ):  
+    """
+    Produces plots comparing the similarity between real and synthetic data for different methods.
+    
+    Parameters
+    ----------
+    parent_dir : str
+        Path to the parent directory of the experiment.
+    real_data_path : str
+        Path to the real data directory.
+    eval_type : str
+        Type of evaluation to be performed. Choices are 'real' or 'synthetic'.
+        "real" means that the real training data is used for evaluation.
+        "synthetic" means that the synthetic training data is used for evaluation.
+        Either "real" or "synthetic" will be compared to the "real" test data. 
+    T_dict : dict
+        Dictionary containing transformation configurations.
+    seed : int, optional
+        Random seed for reproducibility, by default 0.
+    num_classes : int, optional
+        Number of classes in the target variable, by default 2.
+    save_dir : str, optional
+        Path to the directory where plots will be saved, by default None.
+    """
     print("Starting Similarity Evaluation")
     zero.improve_reproducibility(seed)
     if eval_type != "real":
@@ -93,13 +132,12 @@ def produce_plots(
             except Exception as e:
                 print("Could not copy info.json from real_data_path to synthetic_data_path, Error: ", e)
 
-    # apply Transformations ? 
-    T = lib.Transformations(**T_dict)
 
-    X_num_val, X_cat_val, y_val = read_pure_data(real_data_path, 'val')
-
+    # Todo? combine val and train data for evaluation (if eval_type == 'real')
+    # X_num_val, X_cat_val, y_val = read_pure_data(real_data_path, 'val')
 
 
+    # merged is possible to set in eval_catboost.py, but not supported here. Should be removed in the future from eval_catboost.py as well
     print('-'*100)
     if eval_type == 'merged':
         print("Merged eval similarity is not supported.")
@@ -108,17 +146,17 @@ def produce_plots(
         raise "Choose eval method"
 
     path = real_data_path if eval_type == 'real' else synthetic_data_path
-
+    # train Controller and test Controller
     print(f"Loading {eval_type} Training data for comparison to the real Test data from {str(path)}")
     print(f"Test (and val) Data will be Loaded from {real_data_path}")
-    train_transform = TabularTransformer(
+    train_transform = TabularDataController(
         path,
         "identity",
         num_classes=num_classes,
         splits=["train"])
     df_train = train_transform.to_pd_DataFrame(splits=["train"])
 
-    test_transform = TabularTransformer(
+    test_transform = TabularDataController(
         real_data_path,
         "identity",
         num_classes=num_classes,
@@ -127,6 +165,7 @@ def produce_plots(
 
     df_test = test_transform.to_pd_DataFrame(splits=["test"])
     
+    # Create plots using TableEvaluator
     print("Starting table Evaluator")
     from tabsyndex.table_evaluator_fix import TableEvaluatorFix as TableEvaluator
 
@@ -141,6 +180,7 @@ def produce_plots(
         df_train[target_col] = df_train[target_col].astype(float)
 
     print("SEED: ", seed)
+    # not necessary for now
     # if len(df_test) > len(df_train):
     #     df_test = df_test.sample(n=len(df_train), random_state=seed)
     # elif len(df_train) > len(df_test):
@@ -150,18 +190,30 @@ def produce_plots(
     save_dir = os.path.join(save_dir, "plots")
     print("Visual Eval")
     te.visual_evaluation(save_dir=save_dir)
-    # te.plot_mean_std(fname=save_dir/'mean_std.png')
-    # te.plot_cumsums(fname=save_dir/'cumsums.png')
-    # te.plot_distributions(fname=save_dir/'distributions.png')
-    # te.plot_correlation_difference()
-    # plot_correlation_difference(real = df_test, fake=df_train, cat_cols=train_transform.config["dataset_config"]["cat_columns"], plot_diff=True, fname=save_dir/'correlation_difference.png')
-    # te.plot_pca(fname=save_dir/'pca.png') 
 
 
 if __name__ == "__main__":
     main()
 
+# not necessary for now
 def _equal_length(df1, df2):
+        """
+    Make two DataFrames have equal length by sampling.
+
+    Parameters
+    ----------
+    df1 : pd.DataFrame
+        The first DataFrame.
+    df2 : pd.DataFrame
+        The second DataFrame.
+
+    Returns
+    -------
+    df1 : pd.DataFrame
+        The first DataFrame with equal length.
+    df2 : pd.DataFrame
+        The second DataFrame with equal length.
+    """
     len1 = len(df1)
     len2 = len(df2)
     if len1 > len2:
