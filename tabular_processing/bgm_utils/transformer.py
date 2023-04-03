@@ -1,3 +1,13 @@
+'''
+Credits: 
+Processing is based upon the work of the authors of:
+https://github.com/Team-TUD/CTAB-GAN-Plus
+https://github.com/Team-TUD/CTAB-GAN
+
+No changes have been made to the code below.
+Only documentation has been added.
+'''
+
 import numpy as np
 import pandas as pd
 import torch
@@ -5,7 +15,62 @@ from sklearn.mixture import BayesianGaussianMixture
 
 
 class DataTransformer:
+    """
+    A class to transform and inverse transform data for machine learning applications.
 
+    Parameters
+    ----------
+    meta : list of dicts
+        metadata for each column of the input data
+    model : list
+        trained models for each non-categorical column
+    components : list of np.ndarray
+        component information for each non-categorical column
+    ordering : list of np.ndarray
+        ordering information for each mixed column
+    non_categorical_columns : list of int
+        column indices of non-categorical columns
+    general_columns : list of int
+        column indices of general columns
+    n_clusters : int
+        number of clusters in the trained models for each non-categorical column
+
+    Attributes
+    ----------
+    reorder_info : list of tuples
+        information on how the data was split into categorical and numerical parts
+    cat_style : str
+        the style used to encode categorical variables
+    x_cat : np.ndarray
+        categorical part of the data
+    x_num : np.ndarray
+        numerical part of the data
+
+    Methods
+    -------
+    inverse_transform(data)
+        Inverse transforms the given data to the original input space.
+        Parameters:
+            data : np.ndarray
+                the transformed data to be inverse transformed
+        Returns:
+            np.ndarray
+                the inverse transformed data
+            int
+                the number of invalid rows in the input data
+    split_cat_num(data, cat_style="one-hot")
+        Splits the input data into categorical and numerical parts.
+        Parameters:
+            data : np.ndarray
+                the data to be split
+            cat_style : str, optional
+                the style used to encode categorical variables (default is "one-hot")
+        Returns:
+            np.ndarray
+                the categorical part of the data
+            np.ndarray
+                the numerical part of the data
+    """
     def __init__(self, train_data=pd.DataFrame, categorical_list=[], mixed_dict={}, general_list=[],
                  non_categorical_list=[], n_clusters=10, eps=0.005):
         np.random.seed(42)

@@ -56,7 +56,7 @@ def sample(
     num_samples : int, optional
         The number of samples to generate, defaults to 0.
     model_type : str, optional
-        The type of the model, defaults to 'mlp'. Options: ["resnet", "mlp"]
+        The type of the model, defaults to 'mlp'. Options: ["resnet", "mlp"].
     model_params : dict, optional
         The parameters of the model, defaults to None.
     model_path : str, optional
@@ -64,9 +64,9 @@ def sample(
     num_timesteps : int, optional
         The number of timesteps for the diffusion process, defaults to 1000.
     gaussian_loss_type : str, optional
-        The type of Gaussian loss, defaults to 'mse'. Options: ["mse", "kl"]
+        The type of Gaussian loss, defaults to 'mse'. Options: ["mse", "kl"].
     scheduler : str, optional
-        The scheduler for the diffusion process, defaults to 'cosine'. Options: ["linear", "cosine"]
+        The scheduler for the diffusion process, defaults to 'cosine'. Options: ["linear", "cosine"].
     T_dict : dict, optional
         The transformations dictionary, defaults to None.
     num_numerical_features : int, optional
@@ -90,7 +90,7 @@ def sample(
     zero.improve_reproducibility(seed)
 
     # add TabularDataController to revert transform synthetic sampled data at the end
-    tabular_Transformer = TabularDataController(
+    tabular_controller = TabularDataController(
         real_data_path, 
         processor_type,
         num_classes=model_params['num_classes'],
@@ -98,7 +98,7 @@ def sample(
     
     # also transform because information from transformation process might be needed
     # will be reloaded if TabularProcessor is already saved
-    tabular_Transformer.fit_transform(reload = True, save_processor = True) 
+    tabular_controller.fit_transform(reload = True, save_processor = True) 
     real_data_path = os.path.join(real_data_path, processor_type)
 
     # create dataset and load transformations
@@ -179,23 +179,22 @@ def sample(
     X_cat, X_num = None, None
     
     # Reverse the "standard" preprocessing transformations
-    num_numerical_features = tabular_Transformer.dim_info["transformed"]["num_dim"] + int(D.is_regression and not model_params["is_y_cond"])
+    num_numerical_features = tabular_controller.dim_info["transformed"]["num_dim"] + int(D.is_regression and not model_params["is_y_cond"])
      
     X_num_ = X_gen
-    if tabular_Transformer.dim_info["transformed"]["cat_dim"] > 0: # if transformed data has categorical features, transform them back
-    # if num_numerical_features < X_gen.shape[1]:
+    if tabular_controller.dim_info["transformed"]["cat_dim"] > 0: # Changed: if transformed data has categorical features, transform them back
+    # Old: if num_numerical_features < X_gen.shape[1]:
         np.save(os.path.join(parent_dir, 'X_cat_unnorm'), X_gen[:, num_numerical_features:])
         # _, _, cat_encoder = lib.cat_encode({'train': X_cat_real}, T_dict['cat_encoding'], y_real, T_dict['seed'], True)
         if T_dict['cat_encoding'] == 'one-hot':
             X_gen[:, num_numerical_features:] = to_good_ohe(D.cat_transform.steps[0][1], X_num_[:, num_numerical_features:])
         X_cat = D.cat_transform.inverse_transform(X_gen[:, num_numerical_features:])
 
-    if num_numerical_features_ != 0:
-        # _, normalize = lib.normalize({'train' : X_num_real}, T_dict['normalization'], T_dict['seed'], True)
+    if num_numerical_features_ != 0: # Changed
+        # Old: _, normalize = lib.normalize({'train' : X_num_real}, T_dict['normalization'], T_dict['seed'], True)
         np.save(os.path.join(parent_dir, 'X_num_unnorm'), X_gen[:, :num_numerical_features])
         X_num_ = D.num_transform.inverse_transform(X_gen[:, :num_numerical_features])
         X_num = X_num_[:, :num_numerical_features]
-
         X_num_real = np.load(os.path.join(real_data_path, "X_num_train.npy"), allow_pickle=True)
         disc_cols = []
         for col in range(X_num_real.shape[1]):
@@ -210,7 +209,7 @@ def sample(
             X_num = round_columns(X_num_real, X_num, disc_cols)
 
     # Inverse TabularProcessing transformations
-    X_cat, X_num, y_gen = tabular_Transformer.inverse_transform(X_cat, X_num, y_gen) 
+    X_cat, X_num, y_gen = tabular_controller.inverse_transform(X_cat, X_num, y_gen) 
 
     # Save for Evaluation
     print("Saving Synthetic Data at: ", str(parent_dir))

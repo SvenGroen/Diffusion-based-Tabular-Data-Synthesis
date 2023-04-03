@@ -1,3 +1,4 @@
+''' This have not been changed despite some comments and documentation.'''
 import numpy as np
 import os
 import lib
@@ -9,6 +10,26 @@ def get_model(
     n_num_features,
     category_sizes
 ): 
+    """
+    Creates and returns an instance of the specified diffusion model.
+
+    Parameters
+    ----------
+    model_name : str
+        Name of the model to be created. Either "mlp" or "resnet".
+    model_params : dict
+        A dictionary of parameters to be passed to the constructor of the specified model.
+    n_num_features : int
+        The number of numerical features in the input data.
+    category_sizes : list of int
+        The size of each categorical feature in the input data.
+
+    Returns
+    -------
+    model : object
+        An instance of the specified diffusion model.
+
+    """
     print(model_name)
     if model_name == 'mlp':
         model = MLPDiffusion(**model_params)
@@ -20,11 +41,20 @@ def get_model(
 
 def update_ema(target_params, source_params, rate=0.999):
     """
-    Update target parameters to be closer to those of source parameters using
-    an exponential moving average.
-    :param target_params: the target parameter sequence.
-    :param source_params: the source parameter sequence.
-    :param rate: the EMA rate (closer to 1 means slower).
+    Update target parameters to be closer to those of source parameters using an exponential moving average.
+
+    Parameters
+    ----------
+    target_params : iterator of Tensors
+        The target parameter sequence.
+    source_params : iterator of Tensors
+        The source parameter sequence.
+    rate : float, optional
+        The EMA rate (closer to 1 means slower). Default is 0.999.
+
+    Returns
+    -------
+    None
     """
     for targ, src in zip(target_params, source_params):
         targ.detach().mul_(rate).add_(src.detach(), alpha=1 - rate)
@@ -41,7 +71,32 @@ def make_dataset(
     is_y_cond: bool,
     change_val: bool,
     skip_splits: list = []
-):
+) -> lib.Dataset:
+    """
+    Reads and transforms the dataset from the given path, applies the provided
+    transformations, and returns a `lib.Dataset` object.
+
+    Parameters
+    ----------
+    data_path : str
+        The path to the dataset.
+    T : lib.Transformations
+        The transformation to apply to the dataset.
+    num_classes : int
+        The number of classes for classification datasets. Set to 0 for regression datasets.
+    is_y_cond : bool
+        Whether the y label is concatenated with X. Only applicable for classification datasets.
+    change_val : bool
+        Whether to change the validation set to the test set.
+    skip_splits : list, optional
+        A list of splits to skip, by default []
+
+    Returns
+    -------
+    lib.Dataset
+        The transformed dataset.
+    """
+
     # classification
     if num_classes > 0:
         X_cat = {} if os.path.exists(os.path.join(data_path, 'X_cat_train.npy')) or not is_y_cond else None

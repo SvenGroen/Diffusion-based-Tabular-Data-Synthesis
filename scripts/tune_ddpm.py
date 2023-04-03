@@ -10,6 +10,22 @@ from pathlib import Path
 from azureml.core import Run
 import pprint
 
+"""
+Runs an optimization using Optuna to find the best hyperparameters for a deep generative model.
+
+Arguments:
+----------
+ds_name (str) : The name of the dataset.
+train_size (int) : The size of the training set.
+eval_type (str) : The evaluation type. Can be 'merged' or 'synthetic'.
+eval_model (str) : The type of the evaluation model. Can be 'mlp' or 'resnet'.
+prefix (str) : The prefix to add to the best experiment directory.
+--eval_seeds (bool) : Whether to evaluate the seeds of the best experiment or not (default False).
+--debug (bool) : Whether to run in debug mode or not (default False).
+--optimize_sim_score (bool) : Whether to optimize for similarity score instead of model score (default False).
+
+""" 
+
 parser = argparse.ArgumentParser()
 parser.add_argument('ds_name', type=str)
 parser.add_argument('train_size', type=int)
@@ -47,6 +63,25 @@ print("exps_path: ", exps_path)
 
 
 def _suggest_mlp_layers(trial):
+    """
+    Suggests the number of layers and the dimensions of an MLP (multi-layer perceptron) for a given Optuna trial.
+
+    The function first defines the range of the number of layers, as well as the minimum and maximum dimensions of each
+    layer, as exponential base 2. Then, it uses the `trial.suggest_int()` method to sample an integer between `d_min`
+    and `d_max`, inclusive, for each layer. It constructs the list of layer dimensions by concatenating the first,
+    middle, and last layers' dimensions. The middle layer dimensions are repeated `n_layers - 2` times, where `n_layers`
+    is the total number of layers. The function returns the list of layer dimensions.
+
+    Parameters
+    ----------
+    trial : optuna.Trial
+        An Optuna trial.
+
+    Returns
+    -------
+    list of int
+        The list of dimensions of each layer of an MLP, where each dimension is a power of 2.
+    """
     def suggest_dim(name):
         t = trial.suggest_int(name, d_min, d_max)
         return 2 ** t
@@ -63,7 +98,22 @@ def _suggest_mlp_layers(trial):
     return d_layers
 
 def objective(trial):
-    
+    """
+    Objective function for Optuna. This function defines the search space for the optimization, and computes the
+    score to optimize, using the hyperparameters suggested by Optuna.
+
+    Parameters
+    ----------
+    trial : optuna.trial.Trial
+        Optuna's `Trial` object representing the current trial.
+
+    Returns
+    -------
+    float
+        The score to optimize, as a float value. The higher the score, the better the hyperparameters.
+    """
+
+    # Hyperparameter search space definition
     lr = trial.suggest_loguniform('lr', 0.00001, 0.003)
     d_layers = _suggest_mlp_layers(trial)
     weight_decay = 0.0    
@@ -75,10 +125,10 @@ def objective(trial):
     num_timesteps = trial.suggest_categorical('num_timesteps', [100, 1000])
     num_samples = int(train_size * (2 ** trial.suggest_int('num_samples', -2, 1)))
 
+    # load config and overwrite the hyperparameters with the suggested values from Optuna
     base_config = lib.load_config(base_config_path)
     print("BASE CONFIG: ")
     pprint.pprint(base_config, width=-1)
-
     base_config['train']['main']['lr'] = lr
     base_config['train']['main']['steps'] = steps
     base_config['train']['main']['batch_size'] = batch_size
@@ -89,46 +139,52 @@ def objective(trial):
     base_config['diffusion_params']['gaussian_loss_type'] = gaussian_loss_type
     base_config['diffusion_params']['num_timesteps'] = num_timesteps
     # base_config['diffusion_params']['scheduler'] = scheduler
+
+    # for debug use only small numbers so that the experiment runs faster
     if args.debug:
         base_config['train']['main']['steps'] = 50
         base_config['train']['main']['batch_size'] = 256
         base_config['diffusion_params']['num_timesteps'] = 10
         num_samples = 100
 
-
+    # set the experiment directory
     base_config['parent_dir'] = str(exps_path / f"{trial.number}")
     base_config['eval']['type']['eval_model'] = args.eval_model
     if args.eval_model == "mlp":
         base_config['eval']['T']['normalization'] = "quantile"
 
         base_config['eval']['T']['cat_encoding'] = "one-hot"
-
     trial.set_user_attr("config", base_config)
-
+    # save the config to the experiment directory
     lib.dump_config(base_config, exps_path / 'config.toml')
+
+    # run the pipeline with the overwritten config
     try:
+        # Added: sys.executable to use the same python version as the one used to run the script, 
+        # otherwise it will use the default python version and might cause errors
+        # Additionally, added my_env to use the same environment variables as the one used to run the script
         subprocess.run([sys.executable, f'{pipeline}', '--config', f'{exps_path / "config.toml"}', '--train', '--change_val'], check=True, env=my_env)
     except subprocess.CalledProcessError as e:
         raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
     print("----->FINISHED to run pipeline from tune_ddpm<--------: ")
     
-    # subprocess.check_output("dir /f",shell=True,stderr=subprocess.STDOUT)
-    #     except subprocess.CalledProcessError as e:
-    # raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
-
-
-
+    # Start sampling
     n_datasets = 5
     score = 0.0
     sim_score = []
+    # sample 5 datasets and compute the score for each one
     for sample_seed in range(n_datasets):
         base_config['sample']['seed'] = sample_seed
         lib.dump_config(base_config, exps_path / 'config.toml')
         print("--------------------->SAMPLE SEED: ", sample_seed, "<---------------------")
+        # sample and evaluate synthetic data with the trained model with the overwritten config
+        # Changes: see above
         try:
             subprocess.run([sys.executable, f'{pipeline}', '--config', f'{exps_path / "config.toml"}', '--sample', '--eval', '--change_val'], check=True,  env=my_env)
         except subprocess.CalledProcessError as e:
             raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+        
+        # load the evaluation report and compute the score
         report_path = str(Path(base_config['parent_dir']) / f'results_{args.eval_model}.json')
         report = lib.load_json(report_path)
         sim_path = str(Path(base_config['parent_dir']) / f'results_similarity.json')
@@ -139,12 +195,15 @@ def objective(trial):
         else:
             score += report['metrics']['val']['macro avg']['f1-score']
 
+    # remove tmp experiment directory
     shutil.rmtree(exps_path / f"{trial.number}")
-        
+    
+    # calculate the average score
     for k, v in lib.average_per_key(sim_score).items():
         run.log(k, v)
-
-    print(f"Score calculated: {score / n_datasets}")
+    print(f"ML - Score calculated: {score / n_datasets}")
+    
+    # return the average evaluation score, similarity score if args.optimize_sim_score is True, else ML-efficacy score
     if not args.optimize_sim_score:
         print(f"optimizing for {args.eval_model} score")
         return score / n_datasets
@@ -152,20 +211,25 @@ def objective(trial):
         print("optimizing for similarity score")
         return lib.average_per_key(sim_score)['score-mean']
 
+# setup the Optuna study
 study = optuna.create_study(
     direction='maximize',
     sampler=optuna.samplers.TPESampler(seed=0),
 )
 
 print("---Starting optimizing Optune run---")
+# 50 optuna trials
 n_trials=50
+
 if args.debug:
-    n_trials=10
+    n_trials=10 # for debug use only small numbers so that the experiment runs faster, 
     print(f"DEBUG MODE IS ON: Only Running {n_trials} Optuna trials")
-    
+
+# run the optimization
 study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
 print("---Finished optimizing Optune run---")
 
+# load the best config 
 best_config_path = parent_path / f'{prefix}_best/config.toml'
 best_config = study.best_trial.user_attrs['config']
 
@@ -177,22 +241,16 @@ best_config["parent_dir"] = str(parent_path / f'{prefix}_best/')
 os.makedirs(parent_path / f'{prefix}_best', exist_ok=True)
 lib.dump_config(best_config, best_config_path)
 lib.dump_json(optuna.importance.get_param_importances(study), parent_path / f'{prefix}_best/importance.json')
+
+# Final evaluation with best found parameters,
+# changes: see above
+# First, train the model with the best config
+# Second, sample synthetic dataset with the trained model
+# Third, evaluate the synthetic dataset for multiple seeds in eval_seeds.py
 try:
     subprocess.run([sys.executable, f'{pipeline}', '--config', f'{best_config_path}', '--train', '--sample'], check=True, env=my_env)
 except subprocess.CalledProcessError as e:
     raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
-# Added------------
-# if not os.path.isdir('outputs'):
-#     os.mkdir('outputs')
-# try:
-#     print("Found files in " + str(parent_path / f'{prefix}_best') + ": ")
-#     print(os.listdir(str(parent_path / f'{prefix}_best')))
-#     import shutil
-#     shutil.copyfile(str(parent_path / f'{prefix}_best' / "model.pt"), "outputs/model.pt")
-#     print("Saved model to outputs folder")
-# except Exception as e:
-#     print(e)
-# ----------------
 
 if args.eval_seeds:
     best_exp = str(parent_path / f'{prefix}_best/config.toml')

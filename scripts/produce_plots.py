@@ -19,7 +19,7 @@ import lib
 from lib import concat_features, read_pure_data, get_catboost_config, read_changed_val
 from tabular_processing.tabular_processor import TabularProcessor
 import json
-from tabsyndex.tabsyndex import tabsyndex
+from evaluation.tabsyndex import tabsyndex
 from tabular_processing.tabular_data_controller import TabularDataController
 import time
 import os
@@ -167,7 +167,7 @@ def produce_plots(
     
     # Create plots using TableEvaluator
     print("Starting table Evaluator")
-    from tabsyndex.table_evaluator_fix import TableEvaluatorFix as TableEvaluator
+    from evaluation.table_evaluator_fix import TableEvaluatorFix as TableEvaluator
 
     target_col=train_transform.config["dataset_config"]["target_column"]
     cat_col = train_transform.config["dataset_config"]["cat_columns"]

@@ -1,5 +1,12 @@
 """
 Taken from https://github.com/vikram2000b/tabsyndex/blob/main/tabsyndex.py
+
+Changes:
+- added label encoding at the beginning and transformed the dataframes
+--> replaced "from dython.nominal import numerical_encoding" numerical_encoding inside of ML efficacy,
+since it continuously caused errors.
+- added documentation
+
 """
 
 import pandas as pd
@@ -17,6 +24,22 @@ import scipy.stats as ss
 from dython.nominal import theils_u, compute_associations, numerical_encoding
 
 def transform_cat_cols(df, cat_cols):
+  """
+  Transforms categorical columns to numeric using label encoding.
+
+  Parameters
+  ----------
+  df : pandas.DataFrame
+      The DataFrame to transform.
+  cat_cols : list of str
+      The list of column names to transform.
+
+  Returns
+  -------
+  pandas.DataFrame
+      The transformed DataFrame.
+
+  """
   new_df = df.copy()  # make a copy of the dataframe
   for col in cat_cols:
     if new_df[col].dtype != int:
@@ -25,8 +48,63 @@ def transform_cat_cols(df, cat_cols):
   return new_df  # return the transformed dataframe
 
 def tabsyndex(real_data, fake_data, cat_cols, target_col=-1, target_type='regr'):
+  """
+  Evaluates the similarity between a real dataset and a synthetic dataset using multiple methods and returns a score. 
+
+  Parameters
+  ----------
+  real_data : pandas.DataFrame
+      The real dataset to be compared.
+  fake_data : pandas.DataFrame
+      The synthetic dataset to be compared.
+  cat_cols : list of str
+      The names of the categorical columns in the dataset.
+  target_col : int, optional
+      The column index of the target variable. Default is -1.
+  target_type : {'regr', 'class'}, optional
+      The type of target variable. Default is 'regr'.
+      
+  Returns
+  -------
+  dict
+      A dictionary containing the overall score and individual component scores.
+
+  Notes
+  -----
+  This function performs the following evaluations:
+  - Basic statistics comparison: mean, standard deviation, and median
+  - Correlation matrix comparison using compute_associations from dython
+  - Machine learning efficacy comparison using four different models: random forest regressor, LASSO regression, Ridge regression, and elastic net regression for regression problems; 
+    logistic regression, random forest classifier, decision tree classifier, and MLP classifier for classification problems
+  - Predictive mean squared error
+  - Support coverage, which is a measure of the coverage of the support of each feature distribution in the real dataset by the support of the corresponding feature distribution in the synthetic dataset.
+
+  The individual scores are combined using an equal-weight average to produce the overall score.
+
+  Examples
+  --------
+  >>> real_data = pd.read_csv('real_data.csv')
+  >>> fake_data = pd.read_csv('fake_data.csv')
+  >>> cat_cols = ['gender', 'education']
+  >>> result = tabsyndex(real_data, fake_data, cat_cols)
+  """
 
   def mape (vector_a, vector_b):
+    """
+    Calculates the mean absolute percentage error between two vectors.
+
+    Parameters
+    ----------
+    vector_a : np.ndarray
+        The first vector.
+    vector_b : np.ndarray
+        The second vector.
+
+    Returns
+    -------
+    np.ndarray
+        The mean absolute percentage error.
+    """
     return abs(vector_a-vector_b)/abs(vector_a+1e-6)
   
   # if cat cols are not label encoded, label encode them
@@ -58,9 +136,6 @@ def tabsyndex(real_data, fake_data, cat_cols, target_col=-1, target_type='regr')
   fake_data = fake_data_encoded.copy()
 
   # normalize the data
-
-
-
   scaler = MinMaxScaler()
   real_data_norm = scaler.fit_transform(real_data)
   real_data_norm = pd.DataFrame(real_data_norm, columns=real_data.columns)
@@ -68,6 +143,14 @@ def tabsyndex(real_data, fake_data, cat_cols, target_col=-1, target_type='regr')
   fake_data_norm = pd.DataFrame(fake_data_norm, columns=fake_data.columns)
   
   def basic_stats():
+    """
+    Computes the basic statistics for the real and fake data, and calculates the mean absolute percentage error between them.
+
+    Returns
+    -------
+    float
+      The mean absolute percentage error.
+    """
     real_mean = np.mean(real_data, axis=0)
     fake_mean = np.mean(fake_data, axis=0)
 
@@ -91,6 +174,15 @@ def tabsyndex(real_data, fake_data, cat_cols, target_col=-1, target_type='regr')
     return score
 
   def corr():
+    """
+    Computes the correlation matrix for the real and fake data using the Theil's U statistic, and calculates the mean absolute percentage error between them.
+
+    Returns
+    -------
+    float
+        The mean absolute percentage error.
+
+    """
     real_corr = compute_associations(real_data, nominal_columns=cat_cols, theil_u=True).astype(float)
     fake_corr = compute_associations(fake_data, nominal_columns=cat_cols, theil_u=True).astype(float)
 
@@ -106,6 +198,15 @@ def tabsyndex(real_data, fake_data, cat_cols, target_col=-1, target_type='regr')
     return score
 
   def ml_efficacy():
+    """
+    Computes the machine learning efficacy of the real and fake data using several models, and calculates the mean absolute percentage error between them.
+
+    Returns
+    -------
+    float
+        The mean absolute percentage error.
+
+    """
     # real = numerical_encoding(real_data_norm, nominal_columns=cat_cols)
     # fake = numerical_encoding(fake_data_norm, nominal_columns=cat_cols)
     real = real_data_norm
@@ -168,6 +269,15 @@ def tabsyndex(real_data, fake_data, cat_cols, target_col=-1, target_type='regr')
     return score
 
   def pmse():
+    """
+    Computes the probability mass similarity of the real and fake data, and calculates a score based on the ratio of the computed value to the expected value.
+
+    Returns
+    -------
+    float
+        The computed score.
+
+    """
     # data = real_data_norm.append(fake_data_norm, ignore_index=True)
     data = pd.concat([real_data_norm, fake_data_norm], ignore_index=True)
     data['target'] = [0]*len(real_data)+[1]*len(fake_data)
@@ -194,6 +304,20 @@ def tabsyndex(real_data, fake_data, cat_cols, target_col=-1, target_type='regr')
     return score
 
   def sup_cov(num_bins=20):
+    """
+    Computes the support coverage of the real and fake data, and returns the average value.
+
+    Parameters
+    ----------
+    num_bins : int, optional
+        The number of bins to use when transforming numerical columns to categorical, by default 20.
+
+    Returns
+    -------
+    float
+        The average support coverage.
+
+    """
     sup = 0
     scaling_factor = len(real_data)/len(fake_data)
 

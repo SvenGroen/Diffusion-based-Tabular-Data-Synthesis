@@ -1,5 +1,7 @@
 '''
 Dataset.py from https://github.com/Yura52/tabular-dl-num-embeddings/blob/main/bin/datasets.py
+Copyright (c) 2022 Authors of "On Embeddings for Numerical Features in Tabular Deep Learning"
+This file can be used to download and prepare datasets for the experiments.
 '''
 import argparse
 import enum

@@ -1,3 +1,5 @@
+''' This have not been changed despite some comments and documentation.'''
+
 import optuna
 import lib
 import argparse
@@ -28,7 +30,22 @@ def _suggest_optional(trial: optuna.trial.Trial, distribution: str, label: str, 
         return 0.0
 
 def _suggest_mlp_layers(trial: optuna.trial.Trial, mlp_d_layers: list[int]):
+    """
+    Suggests the number of neurons in each layer of a multi-layer perceptron network.
 
+    Parameters
+    ----------
+    trial : optuna.trial.Trial
+        The current trial object.
+    mlp_d_layers : list[int]
+        A list containing the minimum and maximum number of layers that the network can have,
+        as well as the minimum and maximum number of neurons per layer that can be suggested.
+
+    Returns
+    -------
+    list[int]
+        A list containing the suggested number of neurons in each layer of the MLP.
+    """
     min_n_layers, max_n_layers = mlp_d_layers[0], mlp_d_layers[1]
     d_min, d_max = mlp_d_layers[2], mlp_d_layers[3]
 
@@ -50,6 +67,30 @@ def _suggest_mlp_layers(trial: optuna.trial.Trial, mlp_d_layers: list[int]):
     return d_layers
 
 def suggest_mlp_params(trial):
+    """
+    Generates a dictionary of hyperparameters for a multilayer perceptron (MLP) 
+    model by suggesting values for each parameter using Optuna's suggest functions.
+
+    Parameters
+    ----------
+    trial : optuna.trial.Trial
+        An Optuna trial instance that provides the suggest methods for the hyperparameters.
+        
+    Returns
+    -------
+    dict
+        A dictionary of hyperparameters for the MLP model, with the following keys:
+        
+        - 'lr' : float
+            The learning rate of the optimizer.
+        - 'dropout' : float
+            The dropout rate applied to the input layer and each hidden layer.
+        - 'weight_decay' : float
+            The weight decay (L2 penalty) applied to all weights.
+        - 'd_layers' : list[int]
+            The dimensions of each layer in the MLP model.
+
+    """
     params = {}
     params["lr"] = trial.suggest_loguniform("lr", 5e-5, 0.005)
     params["dropout"] = _suggest_optional(trial, "uniform", "dropout", 0.0, 0.5)
@@ -59,6 +100,41 @@ def suggest_mlp_params(trial):
     return params
 
 def suggest_catboost_params(trial):
+    """
+        Generates a dictionary of hyperparameters for a CatBoost model by suggesting values for each parameter using Optuna's suggest functions.
+
+    Parameters
+    ----------
+    trial : optuna.trial.Trial
+        An Optuna trial instance that provides the suggest methods for the hyperparameters.
+        
+    Returns
+    -------
+    dict
+        A dictionary of hyperparameters for the CatBoost model, with the following keys:
+        
+        - 'learning_rate' : float
+            The learning rate of the model.
+        - 'depth' : int
+            The depth of the tree.
+        - 'l2_leaf_reg' : float
+            The L2 regularization coefficient.
+        - 'bagging_temperature' : float
+            The temperature parameter for Bayesian bootstrap.
+        - 'leaf_estimation_iterations' : int
+            The number of gradient steps used to build a new leaf.
+        - 'iterations' : int
+            The maximum number of iterations to run.
+        - 'early_stopping_rounds' : int
+            The number of early stopping rounds to use.
+        - 'od_pval' : float
+            The p-value threshold for early stopping.
+        - 'task_type' : str
+            The task type (CPU or GPU).
+        - 'thread_count' : int
+            The number of threads to use.
+
+    """
     params = {}
     params["learning_rate"] = trial.suggest_loguniform("learning_rate", 0.001, 1.0)
     params["depth"] = trial.suggest_int("depth", 3, 10)
@@ -77,7 +153,20 @@ def suggest_catboost_params(trial):
 
     return params
 
-def objective(trial):
+def objective(trial: optuna.trial.Trial) -> float:
+    """
+    Train and evaluate a model with the given parameters on the specified dataset.
+
+    Parameters
+    ----------
+    trial : optuna.trial.Trial
+        An Optuna `Trial` object that provides the parameter values for each trial.
+
+    Returns
+    -------
+    float
+        The mean validation F1 score of the trained model.
+    """
     if args.model == "mlp":
         params = suggest_mlp_params(trial)
         train_func = train_mlp

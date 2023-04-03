@@ -17,7 +17,7 @@ import lib
 from lib import concat_features, read_pure_data, get_catboost_config, read_changed_val
 from tabular_processing.tabular_processor import TabularProcessor
 import json
-from tabsyndex.tabsyndex import tabsyndex
+from evaluation.tabsyndex import tabsyndex
 from tabular_processing.tabular_data_controller import TabularDataController
 import time
 
@@ -91,17 +91,17 @@ def calculate_similarity_score(
     # Note: there is probably a more efficient way to do this, but this is the easiest way to do it for now
 
     # validation Controller
-    val_transform = TabularDataController(
+    val_controller = TabularDataController(
         real_data_path, 
         "identity",
         num_classes=num_classes,
         is_y_cond=is_y_cond,
         splits=["val"])
     # add validation data to the controller (might have changed if change_val is True)
-    val_transform.x_cat["val"] = X_cat_val
-    val_transform.x_num["val"] = X_num_val
-    val_transform.y["val"] = y_val
-    df_val = val_transform.to_pd_DataFrame(splits=["val"])
+    val_controller.x_cat["val"] = X_cat_val
+    val_controller.x_num["val"] = X_num_val
+    val_controller.y["val"] = y_val
+    df_val = val_controller.to_pd_DataFrame(splits=["val"])
 
     # merged is possible to set in eval_catboost.py, but not supported here. Should be removed in the future from eval_catboost.py as well
     print('-'*100)
@@ -116,33 +116,33 @@ def calculate_similarity_score(
     # train Controller and test Controller
     print(f"Loading {eval_type} Training data for comparison to the real Test data from {str(path)}")
     print(f"Test (and val) Data will be Loaded from {real_data_path}")
-    train_transform = TabularDataController(
+    train_controller = TabularDataController(
         path,
         "identity",
         num_classes=num_classes,
         is_y_cond=is_y_cond,
         splits=["train"])
-    df_train = train_transform.to_pd_DataFrame(splits=["train"])
+    df_train = train_controller.to_pd_DataFrame(splits=["train"])
 
-    test_transform = TabularDataController(
+    test_controller = TabularDataController(
         real_data_path,
         "identity",
         num_classes=num_classes,
         is_y_cond=is_y_cond,
         splits=["test"])
-    df_test = test_transform.to_pd_DataFrame(splits=["test"])
+    df_test = test_controller.to_pd_DataFrame(splits=["test"])
     
     # calculate similarity score, make sure that the dataframes have the same length, otherwise the similarity score will likely throw an error
     if change_val:
         print(f"comparing {eval_type} to real validation data:")
         df_val, df_train = _equal_length(df_val, df_train)
         sim_score = tabsyndex(df_val, df_train, 
-            cat_cols=train_transform.config["dataset_config"]["cat_columns"], )
+            cat_cols=train_controller.config["dataset_config"]["cat_columns"], )
     else:
         print(f"comparing {eval_type} to real test data:")
         df_test, df_train = _equal_length(df_test, df_train)
         sim_score = tabsyndex(df_test, df_train, 
-            cat_cols=train_transform.config["dataset_config"]["cat_columns"],)
+            cat_cols=train_controller.config["dataset_config"]["cat_columns"],)
 
     print("*"*100)
     report = {}
@@ -168,10 +168,10 @@ def calculate_similarity_score(
         print("Starting table Evaluator")
         try:
             # TableEvaluatorFix is a modified version of the original TableEvaluator script for visualizations
-            from tabsyndex.table_evaluator_fix import TableEvaluatorFix as TableEvaluator
-            target_col=train_transform.config["dataset_config"]["target_column"]
-            cat_col = train_transform.config["dataset_config"]["cat_columns"]
-            num_col = train_transform.config["dataset_config"]["int_columns"]
+            from evaluation.table_evaluator_fix import TableEvaluatorFix as TableEvaluator
+            target_col=train_controller.config["dataset_config"]["target_column"]
+            cat_col = train_controller.config["dataset_config"]["cat_columns"]
+            num_col = train_controller.config["dataset_config"]["int_columns"]
             # assert cols have the correct type so no errors are thrown
             if target_col in cat_col:
                 df_test[target_col] = df_test[target_col].astype(str)
@@ -187,7 +187,7 @@ def calculate_similarity_score(
             elif len(df_train) > len(df_test):
                 df_train = df_train.sample(n=len(df_test), random_state=seed)
 
-            te = TableEvaluator(df_test, df_train, cat_cols=train_transform.config["dataset_config"]["cat_columns"])
+            te = TableEvaluator(df_test, df_train, cat_cols=train_controller.config["dataset_config"]["cat_columns"])
             save_dir = os.path.join(parent_dir, "plots")
             # create visualizations
             print("Visual Eval")
@@ -195,7 +195,7 @@ def calculate_similarity_score(
 
             # also calculate similarity score from the original author, it is saved but not used in the master thesis
             print("Multiple Eval")
-            output = te.evaluate(return_outputs=True,verbose=True, target_col = train_transform.config["dataset_config"]["target_column"])
+            output = te.evaluate(return_outputs=True,verbose=True, target_col = train_controller.config["dataset_config"]["target_column"])
             print(output)
 
             report['table_evaluator'] = output

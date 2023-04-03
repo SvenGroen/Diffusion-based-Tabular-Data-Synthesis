@@ -1,3 +1,25 @@
+'''
+Credits:
+[1] https://pypi.org/project/table-evaluator/
+[2] https://github.com/Baukebrenninkmeijer/Table-Evaluator
+
+This file is a fix for the original table_evaluator.py [2] file from the package table-evaluator package [1].
+Errors occured when running the original file. This file fixes those errors and adds some features.
+Errors fixed:
+    - plot_correlation_difference() is incompatible with newest pandas version (see https://github.com/Baukebrenninkmeijer/table-evaluator/issues/31)
+    --> Fixed in version 1.5.0, but this code uses version 1.4.2
+
+    - plot_distributions() continues column plots looked different when executing multiple times.
+    At some point, the style seems to be overwritten and the plots look different.
+
+    - plot_distributions() continues column histogram plots have been scaled wrong.
+    Previously, syn and fake data have been concatinated and then plotted. 
+    This resulted in wrong scaling of the histogram plots, such that the scaling of the real data looks different for different synthetic data.
+    Change: plot syn and fake data separately and then plot both on same figure.
+
+    - all functions that had plt.show() had been set to plt.show(block=False), to keep the code runnning.
+    
+'''
 import os
 from pathlib import Path
 from table_evaluator import TableEvaluator
@@ -15,6 +37,36 @@ NO_AUTO_BIN =["capital-gain", "capital-loss"]
 
 
 class TableEvaluatorFix(TableEvaluator):
+    """
+    Children Class from TableEvaluator to fix some bugs and add some features in TableEvaluator.
+    Class for evaluating synthetic data. It is given the real and fake data and allows the user to easily evaluate data with the `evaluate` method.
+    Additional evaluations can be done with the different methods of evaluate and the visual evaluation method.
+
+    ...
+
+    Attributes
+    ----------
+    real : pd.DataFrame
+        Real dataset
+    fake : pd.DataFrame
+        Synthetic dataset
+    cat_cols : list, optional
+        The columns that are to be evaluated as discrete. If passed, unique_thresh is ignored.
+    unique_thresh : float, optional
+        Threshold for automatic evaluation if column is numeric.
+    metric : str, optional
+        The metric to use for evaluating linear relations. Pearson's r by default, but supports all models in scipy.stats.
+    verbose : bool, optional
+        Whether to print verbose output.
+    n_samples : int, optional
+        Number of samples to evaluate. If none, it will take the minimal length of both datasets and cut the larger one off to make sure they
+        are the same length.
+    name : str, optional
+        Name of the TableEvaluator. Used in some plotting functions like `viz.plot_correlation_comparison` to indicate your model.
+
+    Methods
+    -------
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.dist_dict = {"bins": defaultdict(lambda:None),

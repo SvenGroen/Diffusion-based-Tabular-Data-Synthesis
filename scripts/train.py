@@ -11,6 +11,48 @@ from azureml.core import Run
 from tabular_processing.tabular_data_controller import TabularDataController
 
 class Trainer:
+    """
+    Trainer class for training a GaussianMultinomialDiffusion model.
+
+    Parameters
+    ----------
+    diffusion : GaussianMultinomialDiffusion object
+        The diffusion object containing the denoising function and other attributes.
+    train_iter : DataLoader object
+        The training data iterator.
+    lr : float
+        Learning rate for the optimizer.
+    weight_decay : float
+        Weight decay for the optimizer.
+    steps : int
+        Number of steps to train the model.
+    device : torch.device
+        Device to use for training (default is 'cuda:1').
+
+    Attributes
+    ----------
+    ema_model : deepcopy of the denoising function of diffusion object
+    optimizer : torch.optim.AdamW object
+        Optimizer for training the model.
+    loss_history : pandas DataFrame object
+        A DataFrame object to store the history of the training losses.
+    log_every : int
+        The interval of steps to log the training loss.
+    print_every : int
+        The interval of steps to print the training loss.
+    ema_every : int
+        The interval of steps to update the exponential moving average (EMA) model.
+
+    Methods
+    -------
+    _anneal_lr(step)
+        Anneals the learning rate based on the current step.
+    _run_step(x, out_dict)
+        Runs a single training step and updates the model parameters.
+    run_loop()
+        Runs the training loop.
+
+    """
     def __init__(self, diffusion, train_iter, lr, weight_decay, steps, device=torch.device('cuda:1')):
         self.diffusion = diffusion
         self.ema_model = deepcopy(self.diffusion._denoise_fn)
@@ -98,25 +140,71 @@ def train(
     change_val = False,
     processor_type = None
 ):
+    """
+    Train a GaussianMultinomialDiffusion model on tabular data.
+
+    Parameters
+    ----------
+    parent_dir : str
+        The directory where the model and loss history will be saved.
+    real_data_path : str, optional
+        The path to the tabular data, defaults to 'data/higgs-small'.
+    steps : int, optional
+        The number of steps to train the model, defaults to 1000.
+    lr : float, optional
+        Learning rate for the optimizer, defaults to 0.002.
+    weight_decay : float, optional
+        Weight decay for the optimizer, defaults to 1e-4.
+    batch_size : int, optional
+        Batch size for training, defaults to 1024.
+    model_type : str, optional
+        Type of the model architecture to use, defaults to 'mlp'. Options: ["resnet", "mlp"].
+    model_params : dict, optional
+        Dictionary containing the parameters for the model architecture, defaults to None.
+    num_timesteps : int, optional
+        Number of diffusion steps, defaults to 1000.
+    gaussian_loss_type : str, optional
+        Type of the Gaussian loss to use, defaults to 'mse'. Options: ["mse", "kl"].
+    scheduler : str, optional
+        Type of scheduler to use, defaults to 'cosine'. Options: ["linear", "cosine"].
+    T_dict : dict, optional
+        Dictionary containing the transformation parameters, defaults to None.
+    num_numerical_features : int, optional
+        Number of numerical features in the tabular data, defaults to 0.
+    device : torch.device, optional
+        Device to use for training, defaults to 'cuda:1'.
+    seed : int, optional
+        Seed for reproducibility, defaults to 0.
+    change_val : bool, optional
+        Whether to change the validation data, defaults to False.
+    processor_type : str, optional
+        Type of processor to use, defaults to None.
+
+    Returns
+    -------
+    None
+        This function does not return any value. It saves the model and loss history to the parent directory.
+    """
+
+    # normalize paths
     real_data_path = os.path.normpath(real_data_path)
     parent_dir = os.path.normpath(parent_dir)
 
+    # improve reproducibility
     zero.improve_reproducibility(seed)
 
-    # add special processing
-
-    tabular_Transformer = TabularDataController(
+    # add data processing
+    tabular_controller = TabularDataController(
         real_data_path, 
         processor_type,
         num_classes=model_params['num_classes'],
         is_y_cond=model_params['is_y_cond'])
-    tabular_Transformer.fit_transform(reload = True, save_processor = True)
-    real_data_path = tabular_Transformer.save_data()
+    tabular_controller.fit_transform(reload = True, save_processor = True)
+    real_data_path = tabular_controller.save_data()
 
 
-
+    # Set up dataset and model
     T = lib.Transformations(**T_dict)
-
     dataset = make_dataset(
         real_data_path,
         T,
@@ -134,8 +222,8 @@ def train(
     num_numerical_features = dataset.X_num['train'].shape[1] if dataset.X_num is not None else 0
     d_in = np.sum(K) + num_numerical_features
     model_params['d_in'] = d_in
-    print(d_in)
-    
+
+    # create model
     print(model_params)
     model = get_model(
         model_type,
@@ -145,11 +233,11 @@ def train(
     ) # maybe later add U-Net 1D
     model.to(device)
 
+    # Prepare data loader
     # train_loader = lib.prepare_beton_loader(dataset, split='train', batch_size=batch_size)
     train_loader = lib.prepare_fast_dataloader(dataset, split='train', batch_size=batch_size)
 
-
-
+    # Set up diffusion model
     diffusion = GaussianMultinomialDiffusion(
         num_classes=K,
         num_numerical_features=num_numerical_features,
@@ -161,7 +249,8 @@ def train(
     )
     diffusion.to(device)
     diffusion.train()
-
+    
+    # Set up trainer class and run training loop
     trainer = Trainer(
         diffusion,
         train_loader,
@@ -171,7 +260,8 @@ def train(
         device=device
     )
     trainer.run_loop()
-
+    
+    # Save model and loss history
     trainer.loss_history.to_csv(os.path.join(parent_dir, 'loss.csv'), index=False)
     torch.save(diffusion._denoise_fn.state_dict(), os.path.join(parent_dir, 'model.pt'))
     torch.save(trainer.ema_model.state_dict(), os.path.join(parent_dir, 'model_ema.pt'))

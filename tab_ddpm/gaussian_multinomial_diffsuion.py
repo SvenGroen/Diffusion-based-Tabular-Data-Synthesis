@@ -2,6 +2,9 @@
 Based on https://github.com/openai/guided-diffusion/blob/main/guided_diffusion
 and https://github.com/ehoogeboom/multinomial_diffusion
 """
+'''
+Code remained unchanged from the original implementation of TabDDPM authors, except little documentation.
+'''
 
 import torch.nn.functional as F
 import torch
@@ -60,6 +63,32 @@ def betas_for_alpha_bar(num_diffusion_timesteps, alpha_bar, max_beta=0.999):
     return np.array(betas)
 
 class GaussianMultinomialDiffusion(torch.nn.Module):
+    """
+    A PyTorch module that implements Gaussian Multinomial Diffusion, which is used for denoising and smoothing data.
+    
+    Parameters:
+    -----------
+    num_classes: numpy array
+        A vector containing the number of classes for each categorical feature.
+    num_numerical_features: int
+        The number of numerical features in the input data.
+    denoise_fn: callable
+        The denoising function used to denoise the data.
+    num_timesteps: int, default=1000
+        The number of timesteps to use for the diffusion process.
+    gaussian_loss_type: str, default='mse'
+        The type of Gaussian loss to use. Possible values are 'mse' (mean squared error) or 'kl' (Kullback–Leibler).
+    gaussian_parametrization: str, default='eps'
+        The parameterization of the Gaussian distribution. Possible values are 'eps' (standard deviation) or 'x0'.
+    multinomial_loss_type: str, default='vb_stochastic'
+        The type of multinomial loss to use. Possible values are 'vb_stochastic' (stochastic variational inference) or 'vb_all' (variational bound for all timesteps).
+    parametrization: str, default='x0'
+        The parameterization to use for the prior distribution. Possible values are 'x0' or 'direct'.
+    scheduler: str, default='cosine'
+        The scheduler to use for the diffusion process. Possible values are 'cosine' or 'linear'.
+    device: torch device, default=torch.device('cpu')
+        The device on which to perform the computations.
+    """
     def __init__(
             self,
             num_classes: np.array,
@@ -73,7 +102,6 @@ class GaussianMultinomialDiffusion(torch.nn.Module):
             scheduler='cosine',
             device=torch.device('cpu')
         ):
-
         super(GaussianMultinomialDiffusion, self).__init__()
         assert multinomial_loss_type in ('vb_stochastic', 'vb_all')
         assert parametrization in ('x0', 'direct')

@@ -1,3 +1,13 @@
+'''
+Credits: 
+Processing is based upon the work of the authors of:
+https://github.com/Team-TUD/CTAB-GAN-Plus
+https://github.com/Team-TUD/CTAB-GAN
+
+No changes have been made to the code below.
+Only documentation has been added.
+'''
+
 import numpy as np
 import pandas as pd
 from sklearn import preprocessing
@@ -5,7 +15,38 @@ from sklearn import model_selection
 
 
 class DataPrep(object):
+    """
+    A class to preprocess data for machine learning tasks.
 
+    Attributes:
+        categorical_columns (list): A list of names of categorical columns.
+        log_columns (list): A list of names of columns to apply log to.
+        mixed_columns (dict): A dictionary containing mixed type columns.
+        general_columns (list): A list of names of general columns.
+        non_categorical_columns (list): A list of names of non-categorical columns.
+        integer_columns (list): A list of names of integer columns.
+    ----------
+    
+    """
+    def __init__(
+        self,
+        categorical: list,
+        log: list,
+        mixed: dict,
+        general: list,
+        non_categorical: list,
+        integer: list,
+    ) -> None:
+        """
+        Args:
+            categorical (list): A list of names of categorical columns.
+            log (list): A list of names of columns to apply log to.
+            mixed (dict): A dictionary containing mixed type columns.
+            general (list): A list of names of general columns.
+            non_categorical (list): A list of names of non-categorical columns.
+            integer (list): A list of names of integer columns.
+        """
+       
     def __init__(self, categorical: list, log: list, mixed: dict, general: list,
                  non_categorical: list, integer: list):
 
