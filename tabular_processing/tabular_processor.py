@@ -64,7 +64,7 @@ class TabularProcessor(ABC):
 
     @abstractmethod
     def transform(self, x_cat : np.ndarray, x_num : np.ndarray, y : np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-         """
+        """
         Transforms the given tabular data using the implemented transformation strategy.
         
         Parameters:
