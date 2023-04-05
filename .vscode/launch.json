@@ -5,6 +5,27 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Tune_no_path",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env" : {
+                // "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args":[
+                "adult",
+                "10",
+                "synthetic",
+                "catboost",
+                "dppm_tuning_test",
+                "--eval_seeds",
+                "--debug",
+                "--optimize_sim_score"
+            ]
+        },
+        {
             "name": "preprocess",
             "type": "python",
             "request": "launch",
@@ -49,7 +70,7 @@
                 "PYTHONPATH": "${workspaceFolder}"
             },
             "args":[
-                "adult-bgm",
+                "adult",
                 "catboost",
                 "val",
                 "cpu"
