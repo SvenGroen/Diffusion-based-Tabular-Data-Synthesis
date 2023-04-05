@@ -18,7 +18,7 @@ exp/**/**/results_catboost.json
 exp/**/**/results_mlp.json
 exp/**/**/*log*.txt
 configs/
-data/
+src/***/data/
 junk/
 RF/
 exps/
@@ -31,3 +31,4 @@ processor_state/
 *aml_checkpoints/
 *.egg-info/
 !.github/workflows/python-package.yml
+!tests/data/**/*
