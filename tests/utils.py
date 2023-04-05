@@ -22,7 +22,7 @@ class ProcessorFactory():
     @staticmethod
     def get_instance(type):
         if type == "ft":
-            from tabular_processing.ft_processor import FTProcessor
+            from tabsynth.tabular_processing.ft_processor import FTProcessor
             processor = FTProcessor(
                 x_cat=ProcessorFactory.x_cat,
                 x_num=ProcessorFactory.x_num,

@@ -3,14 +3,14 @@ from random import random
 import tempfile
 import subprocess
 from tabsynth import  lib
-import os
+import os, sys
 import optuna
 import argparse
 from pathlib import Path
 from azureml.core import Run
-from train_sample_ctabganp import train_ctabgan, sample_ctabgan
-from scripts.eval_catboost import train_catboost
-from scripts.eval_similarity import calculate_similarity_score
+from tabsynth.CTABGAN_Plus.train_sample_ctabganp import train_ctabgan, sample_ctabgan
+from tabsynth.scripts.eval_catboost import train_catboost
+from tabsynth.scripts.eval_similarity import calculate_similarity_score
 
 parser = argparse.ArgumentParser()
 parser.add_argument('data_path', type=str)

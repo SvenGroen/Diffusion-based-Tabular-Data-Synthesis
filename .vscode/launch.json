@@ -11,10 +11,10 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "env" : {
+            "env": {
                 // "PYTHONPATH": "${workspaceFolder}"
             },
-            "args":[
+            "args": [
                 "adult",
                 "10",
                 "synthetic",
@@ -32,10 +32,10 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "env" : {
+            "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             },
-            "args":[
+            "args": [
                 "--data_folder",
                 "tab-ddpm\\data\\adult-bgm",
                 "bgm"
@@ -48,28 +48,28 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "env" : {
+            "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             },
-            "args":[
-                "--config", 
-                "exp\\adult\\many-exps\\config.toml", 
-                "--sample", 
-                "--eval", 
+            "args": [
+                "--config",
+                "exp\\adult\\many-exps\\config.toml",
+                "--sample",
+                "--eval",
                 "--change_val"
             ]
-        }        
-        ,{
+        },
+        {
             "name": "tune_eval_model",
             "type": "python",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "env" : {
+            "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             },
-            "args":[
+            "args": [
                 "adult",
                 "catboost",
                 "val",
@@ -83,10 +83,10 @@
             "program": "${workspaceFolder}/scripts/pipeline.py",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "env" : {
+            "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             },
-            "args":[
+            "args": [
                 "--config",
                 "${workspaceFolder}\\exp\\adult\\config.toml",
                 "--train",
@@ -102,10 +102,10 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "env" : {
+            "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             },
-            "args":[
+            "args": [
                 "data/adult/",
                 "26048",
                 "synthetic",
@@ -121,10 +121,10 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "env" : {
+            "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             },
-            "args":[
+            "args": [
                 "adult",
                 "10",
                 "synthetic",
@@ -142,17 +142,17 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "env" : {
+            "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             },
-            "args":[
+            "args": [
                 "--config",
                 "${workspaceFolder}\\exp\\adult\\dppm_test_1_best\\config.toml",
                 "2",
                 "ddpm",
                 "synthetic",
                 "catboost",
-                "5",  
+                "5",
             ]
         },
         {
@@ -162,10 +162,10 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "env" : {
+            "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             },
-            "args":[
+            "args": [
                 "--config",
                 "${workspaceFolder}\\exp\\adult\\ctabgan-plus\\config.toml",
                 "--train",
@@ -181,10 +181,10 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "env" : {
+            "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             },
-            "args":[
+            "args": [
                 "--config",
                 "${workspaceFolder}\\exp\\adult\\ctabgan\\config.toml",
                 "--train",
@@ -200,10 +200,10 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "env" : {
+            "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             },
-            "args":[
+            "args": [
                 "--config",
                 "${workspaceFolder}\\exp\\adult\\smote\\config.toml",
                 "--sample",
@@ -217,10 +217,10 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "env" : {
+            "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             },
-            "args":[
+            "args": [
                 "--config",
                 "${workspaceFolder}\\exp\\adult\\tvae\\config.toml",
                 "--train",
@@ -236,17 +236,17 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "env" : {
+            "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             },
-            "args":[
+            "args": [
                 "--config",
                 "${workspaceFolder}\\exp\\adult\\ctabgan\\config.toml",
                 "2",
                 "ctabgan",
                 "synthetic",
                 "catboost",
-                "2",  
+                "2",
             ]
         },
         {
@@ -256,12 +256,11 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "env" : {
+            "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             },
-            "args":[
-            ]
-        } ,  
+            "args": []
+        },
         {
             "name": "Pytest",
             "type": "python",
@@ -269,11 +268,10 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "env" : {
+            "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             },
-            "args":[
-            ]
-        }  
+            "args": []
+        }
     ]
-}    
+}
