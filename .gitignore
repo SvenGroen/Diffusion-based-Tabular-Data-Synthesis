@@ -29,3 +29,5 @@ secrets.json
 outputs/
 processor_state/
 *aml_checkpoints/
+*.egg-info/
+!.github/workflows/python-package.yml
