@@ -60,7 +60,10 @@ class TestFTProcessor(unittest.TestCase):
         for old, new in [(self.x_cat, x_cat_new), (self.x_num, x_num_new), (self.y, y_new)]:
             assert new is not None
             assert old.shape == new.shape
-            self.assertAlmostEqual((old-new).sum(), 0, places=5)
+            if old.dtype == np.float32:
+                self.assertAlmostEqual((old-new).sum(), 0, places=5)
+            else:
+                assert (old == new).all()
 
 
 
