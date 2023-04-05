@@ -1,5 +1,5 @@
 import os
-import lib
+from tabsynth import  lib
 
 def get_test_data():
     cwd = os.getcwd()
