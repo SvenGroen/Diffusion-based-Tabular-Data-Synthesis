@@ -15,12 +15,12 @@ import os
 from sklearn.utils import shuffle
 import zero
 from pathlib import Path
-from tabsynth import  lib
-from lib import concat_features, read_pure_data, get_catboost_config, read_changed_val
-from tabular_processing.tabular_processor import TabularProcessor
+from tabsynth import lib
+from tabsynth.lib import concat_features, read_pure_data, get_catboost_config, read_changed_val
+from tabsynth.tabular_processing.tabular_processor import TabularProcessor
 import json
-from evaluation.tabsyndex import tabsyndex
-from tabular_processing.tabular_data_controller import TabularDataController
+from tabsynth.evaluation.tabsyndex import tabsyndex
+from tabsynth.tabular_processing.tabular_data_controller import TabularDataController
 import time
 import os
 from tabsynth import  lib
@@ -197,7 +197,7 @@ if __name__ == "__main__":
 
 # not necessary for now
 def _equal_length(df1, df2):
-        """
+    """
     Make two DataFrames have equal length by sampling.
 
     Parameters
