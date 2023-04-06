@@ -6,7 +6,7 @@ import os, sys
 import optuna
 import argparse
 from pathlib import Path
-from azureml.core import Run
+# from azureml.core import Run
 from tabsynth.CTABGAN.train_sample_ctabgan import train_ctabgan, sample_ctabgan
 from tabsynth.scripts.eval_catboost import train_catboost
 from tabsynth.scripts.eval_similarity import calculate_similarity_score
@@ -20,7 +20,7 @@ parser.add_argument("--optimize_sim_score", action='store_true', default=False)
 parser.add_argument("--debug", action='store_true', default=False)
 
 args = parser.parse_args()
-run = Run.get_context()
+# run = Run.get_context()
 real_data_path = args.data_path
 eval_type = args.eval_type
 train_size = args.train_size
@@ -135,8 +135,13 @@ def objective(trial):
             sim_score.append(sim_report['sim_score'])
 
             score += metrics.get_val_score()
+
+    # calculate the average score
+    print(f"Average similarity results:")
     for k, v in lib.average_per_key(sim_score).items():
-        run.log(k, v)
+        # run.log(k, v)
+        print(f"{k}: {v}")
+        
     if args.optimize_sim_score:
         print("optimizing for similarity score")
         return lib.average_per_key(sim_score)['score-mean']

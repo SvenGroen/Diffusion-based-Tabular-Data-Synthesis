@@ -7,7 +7,7 @@ from tabsynth.tab_ddpm import GaussianMultinomialDiffusion
 from tabsynth.scripts.utils_train import get_model, make_dataset, update_ema
 from tabsynth import lib
 import pandas as pd
-from azureml.core import Run
+# from azureml.core import Run
 from tabsynth.tabular_processing.tabular_data_controller import TabularDataController
 
 class Trainer:

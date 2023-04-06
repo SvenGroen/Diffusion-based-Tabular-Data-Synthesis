@@ -8,7 +8,7 @@ from copy import deepcopy
 import shutil
 import argparse
 from pathlib import Path
-from azureml.core import Run
+# from azureml.core import Run
 import pprint
 
 """
@@ -36,7 +36,7 @@ parser.add_argument('prefix', type=str)
 parser.add_argument('--eval_seeds', action='store_true',  default=False)
 parser.add_argument("--debug", action='store_true', default=False)
 parser.add_argument("--optimize_sim_score", action='store_true', default=False)
-run = Run.get_context()
+# run = Run.get_context()
 args = parser.parse_args()
 if args.debug:
     print("--->DEBUG MODE IS ON<---")
@@ -200,8 +200,11 @@ def objective(trial):
     shutil.rmtree(exps_path / f"{trial.number}")
     
     # calculate the average score
+    print(f"Average similarity results:")
     for k, v in lib.average_per_key(sim_score).items():
-        run.log(k, v)
+        # run.log(k, v)
+        print(f"{k}: {v}")
+
     print(f"ML - Score calculated: {score / n_datasets}")
     
     # return the average evaluation score, similarity score if args.optimize_sim_score is True, else ML-efficacy score
