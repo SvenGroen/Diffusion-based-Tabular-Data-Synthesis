@@ -11,7 +11,7 @@ from tabsynth.scripts.eval_catboost import train_catboost
 from tabsynth.scripts.eval_mlp import train_mlp
 from tabsynth.scripts.eval_simple import train_simple
 from tabsynth.scripts.eval_similarity import calculate_similarity_score
-from azureml.core import Run
+# from azureml.core import Run
 
 pipeline = {
     'ddpm': 'src/tabsynth/scripts/pipeline.py',
@@ -35,11 +35,11 @@ def eval_seeds(
     change_val=False
 ):
     """
-    Evaluate various models on real and/or synthetic data using different seeds and save the results to Azure ML.
+    Evaluate various models on real and/or synthetic data using different seeds and save the results.
 
     This function evaluates various models (CatBoost and MLP) on real data, synthetic data, or a combination of both. 
     It trains and evaluates the models for a given number of seeds and calculates the mean and standard deviation of the evaluation metrics. 
-    The function also saves the evaluation results to a JSON file and logs the results to Azure ML.
+    The function also saves the evaluation results to a JSON file and logs the results.
 
     Parameters
     ----------
@@ -67,7 +67,7 @@ def eval_seeds(
 
     """
     # for Azure ML
-    run = Run.get_context()
+    # run = Run.get_context()
 
     # create a directory for the final evaluation results
     metrics_seeds_report = lib.SeedsMetricsReport()
@@ -182,7 +182,7 @@ def eval_seeds(
     print("Final result: ")
     sim_reports = lib.average_per_key(sim_reports)
     for k, v in sim_reports.items():
-        run.log("final_"+str(k), v)
+        # run.log("final_"+str(k), v)
         print(f"final_{k}: {v}")
     metrics_seeds_report.get_mean_std()
     res = metrics_seeds_report.print_result()
