@@ -193,7 +193,8 @@ def sample(
     if num_numerical_features_ != 0: # Changed
         # Old: _, normalize = lib.normalize({'train' : X_num_real}, T_dict['normalization'], T_dict['seed'], True)
         np.save(os.path.join(parent_dir, 'X_num_unnorm'), X_gen[:, :num_numerical_features])
-        X_num_ = D.num_transform.inverse_transform(X_gen[:, :num_numerical_features])
+        if D.num_transform is not None:
+            X_num_ = D.num_transform.inverse_transform(X_gen[:, :num_numerical_features])
         X_num = X_num_[:, :num_numerical_features]
         X_num_real = np.load(os.path.join(real_data_path, "X_num_train.npy"), allow_pickle=True)
         disc_cols = []

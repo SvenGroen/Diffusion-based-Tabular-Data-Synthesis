@@ -51,7 +51,8 @@ def objective(trial):
     d_layers = d_first + d_middle + d_last
     ####
 
-    steps = trial.suggest_categorical('steps', [1000, 5000, 10000])
+    # steps = trial.suggest_categorical('steps', [1000, 5000, 10000])
+    steps = trial.suggest_categorical('steps', [1000, 5000, 7500])
     # steps = trial.suggest_categorical('steps', [10])
     batch_size = 2 ** trial.suggest_int('batch_size', 9, 11)
     random_dim = 2 ** trial.suggest_int('random_dim', 4, 7)
@@ -153,7 +154,8 @@ study = optuna.create_study(
     sampler=optuna.samplers.TPESampler(seed=0),
 )
 
-study.optimize(objective, n_trials=35, show_progress_bar=True)
+n_trials = 30 if not args.debug else 10
+study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
 
 os.makedirs(f"exp/{Path(real_data_path).name}/ctabgan-plus/", exist_ok=True)
 config = {
