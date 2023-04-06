@@ -1,6 +1,7 @@
-name: tabsynth
+# name: tddpm
+name: t4
 channels:
-  # - Microsoft
+  - Microsoft
   - defaults
 dependencies:
   - pip
@@ -8,9 +9,9 @@ dependencies:
   - tzdata=2022c=h04d1e81_0
   - wheel=0.37.1=pyhd3eb1b0_0
   - pip:
-    # - -e git+https://github.com/SvenGroen/Diffusion-based-Tabular-Data-Synthesis#egg=tabsynth
-    # - azure-core
-    # - azureml-core
+    - -e git+https://github.com/SvenGroen/Diffusion-based-Tabular-Data-Synthesis#egg=tabsynth
+    - azure-core
+    - azureml-core
     - catboost
     - table_evaluator==1.4.2
     # - torch==1.10.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html

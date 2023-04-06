@@ -1,16 +1,3 @@
-Metadata-Version: 2.1
-Name: tabsynth
-Version: 0.0.0
-Summary: A package for diffusion based tabular data synthesis
-Author: Sven Groen
-License: MIT
-Platform: windows
-Classifier: "Programming Language :: Python :: 3.9.7",
-Classifier: "License :: OSI Approved :: MIT License",
-Classifier: "Operating System :: OS Independent",
-Requires-Python: >=3.9.7
-Provides-Extra: testing
-
 # TabDDPM: Modelling Tabular Data with Diffusion Models
 This is the official code for our paper "TabDDPM: Modelling Tabular Data with Diffusion Models" ([paper](https://arxiv.org/abs/2209.15421))
 

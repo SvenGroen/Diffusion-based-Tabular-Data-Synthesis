@@ -3,8 +3,6 @@
 __pycache__/
 catboost_info/
 **/**.pt
-**/**.ipynb
-!agg_results.ipynb
 !*.ipynb
 **/**.npy
 **/**.gz
@@ -23,12 +21,19 @@ junk/
 RF/
 exps/
 *.yml
+# keep environment.yml
+!environment.yml
+!environment_azure.yml
 *.amltmp
 *.amlignore
 secrets.json
 outputs/
 processor_state/
 *aml_checkpoints/
-*.egg-info/
+src/tabsynth.egg-info/
 !.github/workflows/python-package.yml
 !tests/data/**/*
+
+# any egg-info directory
+*/**.egg-info/
+
