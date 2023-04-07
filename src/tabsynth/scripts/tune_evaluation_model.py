@@ -6,7 +6,7 @@ import argparse
 from tabsynth.scripts.eval_catboost import train_catboost
 from tabsynth.scripts.eval_mlp import train_mlp
 from pathlib import Path
-from tabsynth.lib.util import RUNS_IN_CLOUD
+from tabsynth.lib.variables import ROOT_DIR, RUNS_IN_CLOUD
 
 parser = argparse.ArgumentParser()
 parser.add_argument('ds_name', type=str)
@@ -15,7 +15,7 @@ parser.add_argument('tune_type', type=str)
 parser.add_argument('device', type=str)
 
 args = parser.parse_args()
-data_path = Path(f"src/tabsynth/data/{args.ds_name}")
+data_path = ROOT_DIR / f"src/tabsynth/data/{args.ds_name}"
 best_params = None 
 
 assert args.tune_type in ("cv", "val")
@@ -240,7 +240,7 @@ study.optimize(objective, n_trials=100, show_progress_bar=True)
     
 bets_params = study.best_trial.user_attrs['params']
 
-best_params_path = f"src/tabsynth/tuned_models/{args.model}/{args.ds_name}_{args.tune_type}.json"
+best_params_path = ROOT_DIR / f"src/tabsynth/tuned_models/{args.model}/{args.ds_name}_{args.tune_type}.json"
 if RUNS_IN_CLOUD:
     output_path = Path("outputs").mkdir(parents=True, exist_ok=True)
     best_params_path = Path("outputs") / best_params_path

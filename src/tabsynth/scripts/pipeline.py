@@ -10,7 +10,7 @@ from tabsynth.scripts.eval_similarity import calculate_similarity_score
 from tabsynth.scripts.eval_catboost import train_catboost
 from tabsynth.scripts.eval_mlp import train_mlp
 from tabsynth.scripts.eval_simple import train_simple
-from tabsynth.lib.util import RUNS_IN_CLOUD
+from tabsynth.lib.variables import RUNS_IN_CLOUD
 
 import pandas as pd
 import matplotlib.pyplot as plt

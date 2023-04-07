@@ -10,6 +10,7 @@ import argparse
 from pathlib import Path
 # from azureml.core import Run
 import pprint
+from tabsynth.lib.variables import ROOT_DIR, RUNS_IN_CLOUD
 
 """
 Runs an optimization using Optuna to find the best hyperparameters for a deep generative model.
@@ -45,14 +46,14 @@ ds_name = args.ds_name
 eval_type = args.eval_type 
 assert eval_type in ('merged', 'synthetic')
 prefix = str(args.prefix)
-pipeline = f'src/tabsynth/scripts/pipeline.py'
-base_config_path = f'src/tabsynth/exp/{ds_name}/config.toml'
-parent_path = Path(f'src/tabsynth/exp/{ds_name}/')
-exps_path = Path(f'src/tabsynth/exp/{ds_name}/many-exps/') # temporary dir. maybe will be replaced with tempdiвdr
-if lib.util.RUNS_IN_CLOUD and not "outputs" in str(parent_path):
+pipeline = ROOT_DIR / f'src/tabsynth/scripts/pipeline.py'
+base_config_path = ROOT_DIR / f'src/tabsynth/exp/{ds_name}/config.toml'
+parent_path = ROOT_DIR / f'src/tabsynth/exp/{ds_name}/'
+exps_path = ROOT_DIR / f'src/tabsynth/exp/{ds_name}/many-exps/' # temporary dir. maybe will be replaced with tempdiвdr
+if RUNS_IN_CLOUD and not "outputs" in str(parent_path):
     parent_path = 'outputs' / parent_path
     exps_path = 'outputs' / exps_path
-eval_seeds = f'src/tabsynth/scripts/eval_seeds.py'
+eval_seeds = ROOT_DIR / f'src/tabsynth/scripts/eval_seeds.py'
 
 my_env = os.environ.copy()
 my_env["PYTHONPATH"] = os.getcwd() # Needed to run the subscripts
