@@ -1,5 +1,5 @@
 # name: tddpm
-name: t4
+name: tabsynth
 channels:
   - Microsoft
   - defaults
@@ -9,7 +9,6 @@ dependencies:
   - tzdata=2022c=h04d1e81_0
   - wheel=0.37.1=pyhd3eb1b0_0
   - pip:
-    - -e git+https://github.com/SvenGroen/Diffusion-based-Tabular-Data-Synthesis#egg=tabsynth
     - azure-core
     - azureml-core
     - catboost
@@ -36,8 +35,9 @@ dependencies:
     - tqdm==4.62.3
     - imbalanced-learn==0.7.0
     - rdt==0.6.4
+    - -e git+https://github.com/SvenGroen/Diffusion-based-Tabular-Data-Synthesis#egg=tabsynth
 
-# variables:
-#   # python path variable
-#   - PYTHONPATH: /tab_ddpm
+variables:
+  # python path variable
+  - PYTHONPATH: /../tabsynth
 
