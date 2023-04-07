@@ -24,4 +24,8 @@ CWD = os.getcwd()
 #       CWD_in_local=PROJEKT_FOLDER/
 # This could be easy fixable by running the script inside azure from PROJEKT_FOLDER/ as CWD,
 # however, this would require addind  PROJEKT_FOLDER/src to the PYTHONPATH in the azure script.
-ROOT_DIR = Path(_strip_path_to_src_parent(CWD, "src"))
+
+if RUNS_IN_CLOUD:
+    ROOT_DIR = CWD
+else:
+    ROOT_DIR = Path("src")
