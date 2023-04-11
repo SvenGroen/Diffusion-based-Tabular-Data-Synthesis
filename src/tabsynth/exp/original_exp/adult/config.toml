@@ -1,5 +1,5 @@
-parent_dir = "exp/adult/check"
-real_data_path = "data/adult/"
+parent_dir = "src/tabsynth/exp/adult/check"
+real_data_path = "src/tabsynth/data/adult/"
 num_numerical_features = 6
 model_type = "mlp"
 seed = 0

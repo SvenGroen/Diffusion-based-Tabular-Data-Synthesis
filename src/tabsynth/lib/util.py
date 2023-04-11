@@ -428,5 +428,5 @@ def get_python():
 
 def get_catboost_config(real_data_path, is_cv=False):
     ds_name = Path(real_data_path).name
-    C = load_json(ROOT_DIR / f'src/tabsynth/tuned_models/catboost/{ds_name}_cv.json')
+    C = load_json(ROOT_DIR / f'tabsynth/tuned_models/catboost/{ds_name}_cv.json')
     return C

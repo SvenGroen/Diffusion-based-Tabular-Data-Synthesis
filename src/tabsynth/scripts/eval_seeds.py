@@ -15,11 +15,11 @@ from tabsynth.scripts.eval_similarity import calculate_similarity_score
 # from azureml.core import Run
 
 pipeline = {
-    'ddpm': ROOT_DIR / 'src/tabsynth/scripts/pipeline.py',
-    'smote': ROOT_DIR / 'src/tabsynth/smote/pipeline_smote.py',
-    'ctabgan': ROOT_DIR / 'src/tabsynth/CTAB-GAN/pipeline_ctabgan.py',
-    'ctabgan-plus': ROOT_DIR / 'src/tabsynth/CTAB-GAN-Plus/pipeline_ctabganp.py',
-    'tvae': ROOT_DIR / 'src/tabsynth/CTGAN/pipeline_tvae.py'
+    'ddpm': ROOT_DIR / 'tabsynth/scripts/pipeline.py',
+    'smote': ROOT_DIR / 'tabsynth/smote/pipeline_smote.py',
+    'ctabgan': ROOT_DIR / 'tabsynth/CTAB-GAN/pipeline_ctabgan.py',
+    'ctabgan-plus': ROOT_DIR / 'tabsynth/CTAB-GAN-Plus/pipeline_ctabganp.py',
+    'tvae': ROOT_DIR / 'tabsynth/CTGAN/pipeline_tvae.py'
 }
 # added: create a copy of the environment variables for running the subprocess
 my_env = os.environ.copy()

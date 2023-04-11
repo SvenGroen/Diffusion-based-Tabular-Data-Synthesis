@@ -1,4 +1,4 @@
-parent_dir = "src\\tabsynth\\exp\\adult\\many-exps\\0"
+parent_dir = "src\\tabsynth\\exp\\adult\\many-exps\\5"
 real_data_path = "src/tabsynth/data/adult/"
 num_numerical_features = 6
 model_type = "mlp"
@@ -11,12 +11,8 @@ is_y_cond = true
 
 [model_params.rtdl_params]
 d_layers = [
-    512,
-    512,
-    512,
-    512,
-    512,
     256,
+    1024,
 ]
 dropout = 0.0
 
@@ -27,7 +23,7 @@ scheduler = "cosine"
 
 [train.main]
 steps = 50
-lr = 0.0002288113668475521
+lr = 2.1993579925293352e-05
 weight_decay = 0.0
 batch_size = 256
 

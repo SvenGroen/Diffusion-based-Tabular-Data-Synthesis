@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Tuple, Union
 from enum import Enum
 from tabsynth import  lib
+from tabsynth.lib.variables import ROOT_DIR
 import pickle
 import numpy as np
 
@@ -211,7 +212,7 @@ class TabularDataController:
         pass
 
 
-    def load_processor(self, path: Union[str, Path]="./processor_state/", filename: str=None):
+    def load_processor(self, path: Union[str, Path]=None, filename: str=None):
         """
         Loads the `TabularProcessor` object from a file at the specified path using pickle.
         
@@ -238,6 +239,8 @@ class TabularDataController:
         >>> processor = controller.load_processor(path="./saved_processor_state/", filename="processor_ft.pkl")
         Loaded processor of type ft state from: ./saved_processor_state/processor_ft.pkl
         """
+        if path is None:
+            path = ROOT_DIR / "tabsynth/processor_state/"
         path = path if isinstance(path, Path) else Path(path)
         if filename is None:
             filename = f"processor_{self.processor_type}.pkl"
@@ -251,7 +254,7 @@ class TabularDataController:
             raise e       
         return processor
 
-    def save_processor(self, path: Union[str, Path]="./processor_state/"):
+    def save_processor(self, path: Union[str, Path]= None):
         """
         Saves the current processor instance using pickle.
 
@@ -269,6 +272,8 @@ class TabularDataController:
         ValueError
             If the processor instance has not been fit.
         """
+        if path is None:
+            path = ROOT_DIR / "tabsynth/processor_state/"
         path = path if isinstance(path, Path) else Path(path)
         path.mkdir(parents=True, exist_ok=True)
         path = path / f"processor_{self.processor_type}.pkl"
