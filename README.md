@@ -100,8 +100,8 @@ The repository has the following folder structure:
 |   +---📁src 
 |   |   +---📁tabsynth
 |   |   |   +---📁exp
-|   |   |   |   +---📁dataset_name        # All tuning expirements for the same dataset will be saved here
-|   |   |   |   |   +---📁expirment_name  # individual experiments 
+|   |   |   |   +---📁[dataset_name]        # All tuning expirements for the same dataset will be saved here
+|   |   |   |   |   +---📁[experiment_name]  # individual experiments 
 +---📁processor_state
 +---📁src
 |   +---📁tabsynth
@@ -109,10 +109,10 @@ The repository has the following folder structure:
 |   |   +---📁CTABGAN_Plus                # code for the CTABGAN_Plus model
 |   |   +---📁CTGAN                       # code for the TVAE model (belongs to the "CTGAN" code)
 |   |   +---📁data                        # data folder
-|   |   |   +---📁dataset_name            # individual dataset
+|   |   |   +---📁[dataset_name]          # individual dataset
 |   |   +---📁evaluation                  # contains code for evaluation
 |   |   +---📁exp
-|   |   |   +---📁dataset_name            # contains the exp config.toml for each dataset
+|   |   |   +---📁[dataset_name]          # contains the exp config.toml for each dataset
 |   |   |   +---📁original_exp            # stores the original experiment results from the "TabDDPM" repo
 |   |   +---📁lib                         # various utility functions
 |   |   +---📁processor_state             # tabular processing states will be saved here (will be created in the script)
@@ -128,30 +128,30 @@ The repository has the following folder structure:
 +---📁tests                               # testing code
 |   +---📁data                            # data for testing
 ```
+## Scripts
+The most important scripts are located at the `src/tabsynth/scripts` folder and do the following:
+
+- `pipeline.py`: used to train, sample and evaluate synthetic data for TabDDPM.
+- `tune_ddpm.py`: used for hyperparameter tuning for TabDDPM.
+- `eval_seeds.py`: samples multiple datasets and evaluates a trained model for multiple seeds.
+- `tune_evaluation_model.py`: allows to find the best hyperparameters for the ML-efficacy models (Catboost or MLP)
+
+
 # How to run Experiments
 ><span style="font-size:1.3em;">*I want to generate synthetic data using diffusion model for a specific parameter set* </span>
 
-1. Locate `src/tabsynth/exp/dataset_name/config.toml` and set your experiment parameters to your likening.
+1. Locate `src/tabsynth/exp/[dataset_name]/config.toml` and set your experiment parameters to your likening.
 2. Run:
 ```
-src/tabsynth/scripts/pipeline.py --config src/tabsynth/exp/dataset_name/config.toml --train --sample --eval
+src/tabsynth/scripts/pipeline.py --config src/tabsynth/exp/[dataset_name]/config.toml --train --sample --eval
 ```
 &nbsp;&nbsp;&nbsp;&nbsp; you can run the script with just a subset of --train --sample --eval, however,
 sampling requires to load some pretrained model, which will be loaded from the `outputs/parent_dir/` (config.toml), so make sure to have a pretrained model saved at this location.
 ___
-><span style="font-size:1.3em;">*I want to generate synthetic data using the SMOTE/CTABGAN(+)/TVAE model for a specific parameter set*</span>
 
-1. Locate `src/tabsynth/exp/dataset_name/model_name/config.toml` and set your experiment parameters to your likening.
-2. Run:
-```
-src/tabsynth/model_folder/pipeline_model_name.py --config src/tabsynth/exp/dataset_name/model_name/config.toml --train --sample --eval
-```
-&nbsp;&nbsp;&nbsp;&nbsp; you can run the script with just a subset of --train --sample --eval, however,
-sampling requires to load some pretrained model, which will be loaded from the `outputs/parent_dir/` (config.toml), so make sure to have a pretrained model saved at this location.
-___
 ><span style="font-size:1.3em;">*I want to find the best hyperparameters for a diffusion model (RECOMMENDED)*</span>
 
-1. Locate `src/tabsynth/exp/dataset_name/config.toml` and set your experiment parameters to your likening.
+1. Locate `src/tabsynth/exp/[dataset_name]/config.toml` and set your experiment parameters to your likening.
 Note that the following parameters will be changed and explored during hyperparameter training, so changing them here has no effect:
 ```
 ['model_params']['rtdl_params']['d_layers']
@@ -189,10 +189,65 @@ src/tabsynth/scripts/tune_ddpm.py [ds_name] [train_size] synthetic [catboost|mlp
 ```
 src/tabsynth/scripts/tune_ddpm.py "adult" 26048 synthetic "catboost" ddpm_best --eval_seeds
 ```
+___
+><span style="font-size:1.3em;">*I want to generate synthetic data using the SMOTE/CTABGAN(+)/TVAE model for a specific parameter set*</span>
 
+1. Locate `src/tabsynth/exp/[dataset_name]/[model_name]/config.toml` and set your experiment parameters to your likening.
+2. Run:
+```
+src/tabsynth/model_folder/pipeline_[model_name].py --config src/tabsynth/exp/[dataset_name]/[model_name]/config.toml --train --sample --eval
+```
+&nbsp;&nbsp;&nbsp;&nbsp; It basically works the same as for the TabDDPM model, but just has a separate pipeline file
+___
+><span style="font-size:1.3em;">*I want to do the hyperparameter for the SMOTE/CTABGAN(+)/TVAE model*</span>
 
+1. Locate `src/tabsynth/exp/[dataset_name]/[model_name]/config.toml` and set your experiment parameters to your likening.
+2. Run:
+```
+src/tabsynth/model_folder/tune_[model_name].py [data_path] [train_size]
+```
+&nbsp;&nbsp;&nbsp;&nbsp; It works the same as for the TabDDPM model, but just has a separate tuning file.
+___
 
+# Tabular Processor
+## What is a Tabular Processor?
+As part of my master thesis, I investigated how the generative capability of the diffusion model TabDDPM changes when processing the tabular data beforehand to account for specific challenges of tabular data.
 
+In principle, a tabular processor is just a classical preprocessing strategy.
+This means, the raw data will be encoded by the tabular processor the encoded data will be used to train the diffusion model. The diffusion model will, after training, be used to sample new synthetic data.
+Since the diffusion model was trained on encoded data, it will produce synthetic encoded data.
+Therefore, the tabular processor needs to decode the encoded data back into its original (human readable) format.
+
+The goal of the master thesis was to extend the existing implementation [TODO LINK].
+Hence, the preprocessing from the original implementation (specified in the config.toml [train.T]) remained untouched and will be executed **AFTER** the tabular processing encoding.
+
+To keep the tabular processing as separate and extendable as possible, the strategy design pattern was chosen:
+![Strategy Patters](https://github.com/SvenGroen/Masterarbeit/blob/master/images/strategy.png?raw=true)
+
+In this repository, it is realized inside the `src/tabsynth/tabular_processor` folder.
+3 strategies are implemented:
+1. "identity": does nothing, can be used to "turn off" tabular processing
+2. "bgm": uses the preprocessing strategy of [CTABGAN+](https://github.com/Team-TUD/CTAB-GAN-Plus), which includes a bayesian gausian mixture model (BGM), logarithmic transformations and others.
+3. "ft": uses a ["Feature Tokenizeation"](https://github.com/pfnet-research/TabCSDI/blob/d7655578d51b062fefb16656ba635478b458c92d/src/main_model_table_ft.py) approach from the [paper](https://openreview.net/forum?id=4q9kFrXC2Ae) "Diffusion models for missing value imputation in tabular data" , which is basically static embedding of categorical and numerical columns.
+
+Hence, the current implementation looks like:
+
+![](https://github.com/SvenGroen/Masterarbeit/blob/master/images/tabular_processor.png?raw=true)
+
+The TabularDataController controls the context and is responsible for instantiating Tabular Processor instances.
+Additionally, the TabularDataController handles loading and saving of the instances, as well as the data.
+It also makes sure that no Tabular Processor is fitted on anything else except the training dataset.
+
+## Adding new Tabular Processing mechanisms 
+
+You can easily implement additional processing mechanism by following these steps:
+
+1. Create a class inside `src/tabsynth/tabular_processor/my_processor.py` that inherits from the `TabularProcessor` class from `tabular_processor.py`
+2. Implement the required abstract methods ("\_\_init\_\_", "fit", "transform", "inverse_transform")
+3. Open `src/tabsynth/tabular_processor/tabular_data_controller`
+4. Import your processor class
+5. Add `"my_processor":MyProcessor` to the `SUPPORTED_PROCESSORS` dictionary so the script knows where to find the MyProcessor class.
+6. Inside your experiment `config.toml`, set `[tabular_processor][type] = "my_processor"` and run your experiment
 
 # Appendix
 ## Dataset info.json
