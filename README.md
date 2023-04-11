@@ -53,10 +53,20 @@ adding the project folder to the `PYTHONPATH` manually, like in the [original im
 
 Installing it through pip locally allows easy installation for Windows and Linux users.
 Any changes that you make to the code (which is encouraged) will automatically discovered any used as well.
+
+5. Download and Setup the dataset:
+
+The authors of [TabDDPM](https://github.com/rotot0/tab-ddpm) provided some dataset.  
+Download them at https://www.dropbox.com/s/rpckvcs3vx7j605/data.tar?dl=0 and unpack it into `src/tabsynth/data`
+
+Each dataset, must contain the data separated into training, validation and testing dataset, as well as a separation of categorical, numerical and target columns (`X_[cat|num]_[train|val|test].npy` and `y_[train|val|test].npy`)
+
+Additionally, each dataset folder is required to have an `info.json`, for which you have to add a "dataset_config" entry. Have a look at `src/tabsynth/data/adult/info.json` for an example of the "dataset_config" and have a look at [an explanation of the file](#dataset-infojson) below.
+
+If you want to use a dataset other than "adult" and don't know the "dataset_config", have a look at `src/tabsynth/CTABGAN_Plus/columns.json`, which is a good starting point.
 ___
 
-
-5. Running the code in Microsoft Azure (OPTIONAL):
+6. Running the code in Microsoft Azure (OPTIONAL):
 
 If you want to use Azure to run the code, the environment needs some additional packages:
 
@@ -71,60 +81,6 @@ conda config --env --add channels Microsoft
 
 Have a look at `Azure.ipynb`, which contains example code to setup an environment inside azure (`environment_azure.yml`) and shows how to run the different scripts inside azure.
 ___
-## Dataset setup
-The authors of [TabDDPM](https://github.com/rotot0/tab-ddpm) provided some dataset.
-You can download them at https://www.dropbox.com/s/rpckvcs3vx7j605/data.tar?dl=0 and unpack it into `src/tabsynth/data`
-
-Each dataset, must contain the data separated into training, validation and testing dataset, as well as a separation of categorical, numerical and target columns (`X_[cat|num]_[train|val|test].npy` and `y_[train|val|test].npy`)
-
-Additionally, each dataset folder is required to have an `info.json`.
-This file contains the following information ([Adult income](https://archive.ics.uci.edu/ml/datasets/adult) dataset as example):
-
-```json
-{
-    "name": "Adult", // name of the dataset
-    "id": "adult--default",
-    // What kind of task is the dataset? binary classification (binclass), multiclass classification (multiclass) or regression (regression)
-    "task_type": "binclass", 
-    "n_num_features": 6, // number of numerical/continuous columns in the dataset
-    "n_cat_features": 8, // number of categorical columns in the dataset
-    "test_size": 16281, // size of the test dataset split
-    "train_size": 26048, // size of the train dataset split
-    "val_size": 6513, // size of the validation dataset split
-    "dataset_config": { // NEW: required for tabular processing mechanism
-        "cat_columns": [ // list of the names of the categorical columns
-            "workclass",
-            (...),
-            "income"
-        ],
-        "non_cat_columns": [], // only for BGM Processor: categorical columns with a high dimensionality/cardinality
-        "log_columns": [], // only for BGM Processor: numerical columns that require log transformation
-        "general_columns": [ // only for BGM Processor: columns where "general transform" (GT) from CTABGAN+ (https://arxiv.org/abs/2204.00401) will be applied
-            "age"
-        ],
-        "mixed_columns": { // numerical columns that contain a special categorical value that should be treated as categorical value
-            "capital-loss": [ // column_name : special_categorical_value
-                0.0
-            ],
-            "capital-gain": [
-                0.0
-            ]
-        },
-        "int_columns": [ // list of the names of the numerical/continuous columns
-            "age",
-            (...),
-            "hours-per-week"
-        ],
-        "problem_type": "binclass", // equal to task_type (redundancy needs to be fixed in the future)
-        "target_column": "income" // name of the target column
-    }
-}
-```
-
-Please ensure that you have to add the `dataset_config` information yourself.
-
-Hint: Have a look at `src/tabsynth/CTABGAN_Plus/columns.json`, for datasets other than "adult", which is a good starting point.
-
 
 ## Troubleshooting
 If you have any struggles running some of the script make sure to check the following:
@@ -140,40 +96,40 @@ Also check if `tabsynth` is installed.
 ## Folder Structure
 The repository has the following folder structure:
 ```bash
-+---📁outputs # will be created in the scripts to save all results 
++---📁outputs                             # will be created in the scripts to save all results 
 |   +---📁src 
 |   |   +---📁tabsynth
 |   |   |   +---📁exp
-|   |   |   |   +---📁dataset_name # All tuning expirements for the same dataset will be saved here
-|   |   |   |   |   +---📁expirment_name # individual experiments 
+|   |   |   |   +---📁dataset_name        # All tuning expirements for the same dataset will be saved here
+|   |   |   |   |   +---📁expirment_name  # individual experiments 
 +---📁processor_state
 +---📁src
 |   +---📁tabsynth
-|   |   +---📁CTABGAN # code for the CTABGAN model
-|   |   +---📁CTABGAN_Plus # code for the CTABGAN_Plus model
-|   |   +---📁CTGAN # code for the TVAE model (belongs to the "CTGAN" code)
-|   |   +---📁data # data folder
-|   |   |   +---📁dataset_name # individual dataset
-|   |   +---📁evaluation # contains code for evaluation
+|   |   +---📁CTABGAN                     # code for the CTABGAN model
+|   |   +---📁CTABGAN_Plus                # code for the CTABGAN_Plus model
+|   |   +---📁CTGAN                       # code for the TVAE model (belongs to the "CTGAN" code)
+|   |   +---📁data                        # data folder
+|   |   |   +---📁dataset_name            # individual dataset
+|   |   +---📁evaluation                  # contains code for evaluation
 |   |   +---📁exp
-|   |   |   +---📁dataset_name # contains the exp config.toml for each dataset
-|   |   |   +---📁original_exp # stores the original experiment results from the "TabDDPM" repo
-|   |   +---📁lib # various utility functions
-|   |   +---📁processor_state # tabular processing states will be saved here (will be created in the script)
-|   |   +---📁scripts # (Most important!) Contains all scripts for training, sampling, evaluation, etc.
-|   |   +---📁smote # code for the SMOTE model
-|   |   +---📁tabular_processing # tabular processing implementations
-|   |   |   +---📁bgm_utils # utils for bayesian gaussian mixture
-|   |   |   +---📁ft_utils # utils for feature tokenization
-|   |   +---📁tab_ddpm # code for the tabular diffusion model
-|   |   +---📁tuned_models # machine learning efficacy models hyperparameters
-|   |   |   +---📁catboost # for catboost, from the "TabDDPM" repo
-|   |   |   +---📁mlp # for mlp, from the "TabDDPM" repo
-+---📁tests # testing code
-|   +---📁data # data for testing
+|   |   |   +---📁dataset_name            # contains the exp config.toml for each dataset
+|   |   |   +---📁original_exp            # stores the original experiment results from the "TabDDPM" repo
+|   |   +---📁lib                         # various utility functions
+|   |   +---📁processor_state             # tabular processing states will be saved here (will be created in the script)
+|   |   +---📁scripts                     # (Most important!) all scripts for training, sampling, evaluation, etc.
+|   |   +---📁smote                       # code for the SMOTE model
+|   |   +---📁tabular_processing          # tabular processing implementations
+|   |   |   +---📁bgm_utils               # utils for bayesian gaussian mixture
+|   |   |   +---📁ft_utils                # utils for feature tokenization
+|   |   +---📁tab_ddpm                    # code for the tabular diffusion model
+|   |   +---📁tuned_models                # machine learning efficacy models hyperparameters
+|   |   |   +---📁catboost                # for catboost, from the "TabDDPM" repo
+|   |   |   +---📁mlp                     # for mlp, from the "TabDDPM" repo
++---📁tests                               # testing code
+|   +---📁data                            # data for testing
 ```
-## How to run Experiments
->"I want to generate synthetic data using diffusion model for a specific parameter set"
+# How to run Experiments
+><span style="font-size:1.3em;">*I want to generate synthetic data using diffusion model for a specific parameter set* </span>
 
 1. Locate `src/tabsynth/exp/dataset_name/config.toml` and set your experiment parameters to your likening.
 2. Run:
@@ -181,9 +137,9 @@ The repository has the following folder structure:
 src/tabsynth/scripts/pipeline.py --config src/tabsynth/exp/dataset_name/config.toml --train --sample --eval
 ```
 &nbsp;&nbsp;&nbsp;&nbsp; you can run the script with just a subset of --train --sample --eval, however,
-sampling requires to load some pretrained model, which will be loaded &nbsp;&nbsp;&nbsp;&nbsp;from the `outputs/parent_dir/` (config.toml), so make sure to have a pretrained model saved at this location.
+sampling requires to load some pretrained model, which will be loaded from the `outputs/parent_dir/` (config.toml), so make sure to have a pretrained model saved at this location.
 ___
->"I want to generate synthetic data using the SMOTE/CTABGAN(+)/TVAE model for a specific parameter set"
+><span style="font-size:1.3em;">*I want to generate synthetic data using the SMOTE/CTABGAN(+)/TVAE model for a specific parameter set*</span>
 
 1. Locate `src/tabsynth/exp/dataset_name/model_name/config.toml` and set your experiment parameters to your likening.
 2. Run:
@@ -191,9 +147,9 @@ ___
 src/tabsynth/model_folder/pipeline_model_name.py --config src/tabsynth/exp/dataset_name/model_name/config.toml --train --sample --eval
 ```
 &nbsp;&nbsp;&nbsp;&nbsp; you can run the script with just a subset of --train --sample --eval, however,
-sampling requires to load some pretrained model, which will be loaded &nbsp;&nbsp;&nbsp;&nbsp;from the `outputs/parent_dir/` (config.toml), so make sure to have a pretrained model saved at this location.
+sampling requires to load some pretrained model, which will be loaded from the `outputs/parent_dir/` (config.toml), so make sure to have a pretrained model saved at this location.
 ___
->"I want to find the best hyperparameters for a diffusion model" (RECOMMENDED) 
+><span style="font-size:1.3em;">*I want to find the best hyperparameters for a diffusion model (RECOMMENDED)*</span>
 
 1. Locate `src/tabsynth/exp/dataset_name/config.toml` and set your experiment parameters to your likening.
 Note that the following parameters will be changed and explored during hyperparameter training, so changing them here has no effect:
@@ -237,7 +193,53 @@ src/tabsynth/scripts/tune_ddpm.py "adult" 26048 synthetic "catboost" ddpm_best -
 
 
 
-___
+
+# Appendix
+## Dataset info.json
+
+This file contains the following information ([Adult income](https://archive.ics.uci.edu/ml/datasets/adult) dataset as example):
+
+```json
+{
+    "name": "Adult", // name of the dataset
+    "id": "adult--default",
+    // What kind of task is the dataset? binary classification (binclass), multiclass classification (multiclass) or regression (regression)
+    "task_type": "binclass", 
+    "n_num_features": 6, // number of numerical/continuous columns in the dataset
+    "n_cat_features": 8, // number of categorical columns in the dataset
+    "test_size": 16281, // size of the test dataset split
+    "train_size": 26048, // size of the train dataset split
+    "val_size": 6513, // size of the validation dataset split
+    "dataset_config": { // NEW: required for tabular processing mechanism
+        "cat_columns": [ // list of the names of the categorical columns
+            "workclass",
+            (...),
+            "income"
+        ],
+        "non_cat_columns": [], // only for BGM Processor: categorical columns with a high dimensionality/cardinality
+        "log_columns": [], // only for BGM Processor: numerical columns that require log transformation
+        "general_columns": [ // only for BGM Processor: columns where "general transform" (GT) from CTABGAN+ (https://arxiv.org/abs/2204.00401) will be applied
+            "age"
+        ],
+        "mixed_columns": { // numerical columns that contain a special categorical value that should be treated as categorical value
+            "capital-loss": [ // column_name : special_categorical_value
+                0.0
+            ],
+            "capital-gain": [
+                0.0
+            ]
+        },
+        "int_columns": [ // list of the names of the numerical/continuous columns
+            "age",
+            (...),
+            "hours-per-week"
+        ],
+        "problem_type": "binclass", // equal to task_type (redundancy needs to be fixed in the future)
+        "target_column": "income" // name of the target column
+    }
+}
+```
+
 
 ## Changes made compared to the [TabDDPM](https://github.com/vikram2000b/tabsyndex) repository
 - separate outputs folder: The experiment results are stored in a separate "outputs" folder. This was required for accessing the results in Azure and makes it easier to find the results locally.
