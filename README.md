@@ -1,7 +1,9 @@
 (WORK IN PROGRESS)
 
 # Diffusion based Tabular data synthesis
-This repository contains the software code for my [master thesis](https://github.com/SvenGroen/Masterarbeit)
+This repository allows you to create synthetic tabular data using TabDDPM, CTABGAN, CTABGAN+, TVAE and SMOTE.
+
+It contains the software code for my [master thesis](https://github.com/SvenGroen/Masterarbeit).
 The code is based upon the implementation of [TabDDPM](https://github.com/rotot0/tab-ddpm) and expands their code.
 
 Make sure to have a look at the paper "TabDDPM: Modelling Tabular Data with Diffusion Models" ([paper](https://arxiv.org/abs/2209.15421)).
@@ -19,8 +21,7 @@ Additionally, this code makes use of [TabSynDex](https://github.com/vikram2000b/
    
 # Setup
 ## Environment Setup
-1. Install [anaconda](https://www.anaconda.com/) (just to manage the env).
-___
+1. Install [anaconda](https://www.anaconda.com/) (just to manage the environment).
 2. clone git repository:
 
 ```bash
@@ -28,7 +29,6 @@ cd path/to/where/code/will/be/saved
 
 git clone https://github.com/SvenGroen/Diffusion-based-Tabular-Data-Synthesis.git
 ```
-___
 3. Create the conda environment, please run the following as administrator:
 
 ```bash
@@ -36,9 +36,8 @@ cd path/to/the/github_repo
 
 conda env create -f environment.yml
 ```
-___
-4. activate conda environment and install package locally:
 
+4. activate conda environment and install the package locally:
 
 ```bash
 cd path/to/the/github_repo
@@ -47,7 +46,7 @@ conda activate tabsynth
 
 pip install -e .
 ```
-this will install the `tabsynth` code locally to the conda environment.
+This will install the `tabsynth` code locally to the conda environment.
 Please note, that this code is not meant to be a fully finished pip package.
 Instead, it is used to be fully visible within the code and is used to avoid
 adding the project folder to the `PYTHONPATH` manually, like in the [original implementation](https://github.com/rotot0/tab-ddpm).
@@ -57,7 +56,7 @@ Any changes that you make to the code (which is encouraged) will automatically d
 ___
 
 
-5. "I want to use the code with Microsoft Azure" (OPTIONAL)
+5. Running the code in Microsoft Azure (OPTIONAL):
 
 If you want to use Azure to run the code, the environment needs some additional packages:
 
@@ -71,7 +70,7 @@ conda config --env --add channels Microsoft
 ```
 
 Have a look at `Azure.ipynb`, which contains example code to setup an environment inside azure (`environment_azure.yml`) and shows how to run the different scripts inside azure.
-
+___
 ## Dataset setup
 The authors of [TabDDPM](https://github.com/rotot0/tab-ddpm) provided some dataset.
 You can download them at https://www.dropbox.com/s/rpckvcs3vx7j605/data.tar?dl=0 and unpack it into `src/tabsynth/data`
@@ -83,7 +82,7 @@ This file contains the following information ([Adult income](https://archive.ics
 
 ```json
 {
-    "name": "Adult", //name of the dataset
+    "name": "Adult", // name of the dataset
     "id": "adult--default",
     // What kind of task is the dataset? binary classification (binclass), multiclass classification (multiclass) or regression (regression)
     "task_type": "binclass", 
@@ -95,13 +94,7 @@ This file contains the following information ([Adult income](https://archive.ics
     "dataset_config": { // NEW: required for tabular processing mechanism
         "cat_columns": [ // list of the names of the categorical columns
             "workclass",
-            "education",
-            "marital-status",
-            "occupation",
-            "relationship",
-            "race",
-            "sex",
-            "native-country",
+            (...),
             "income"
         ],
         "non_cat_columns": [], // only for BGM Processor: categorical columns with a high dimensionality/cardinality
@@ -119,10 +112,7 @@ This file contains the following information ([Adult income](https://archive.ics
         },
         "int_columns": [ // list of the names of the numerical/continuous columns
             "age",
-            "fnlwgt",
-            "education-num",
-            "capital-gain",
-            "capital-loss",
+            (...),
             "hours-per-week"
         ],
         "problem_type": "binclass", // equal to task_type (redundancy needs to be fixed in the future)
@@ -254,7 +244,7 @@ ___
 - debug option: some scripts also have a `--debug` flag than can be set, that changes hyperparameters in such a way, that one can quickly go through the whole script without waiting hours. 
 - config.toml: added the `[tabular_processor][type]` option. If you don't want to use a tabular_processor, set it to "identity"
 - info.json:
-every dataset needs to have a `info.json`. Each `info.json` needs to have a `dataset_config` dictionary inside to store information about the dataset properties (see [TODO])
+every dataset needs to have a `info.json`. Each `info.json` needs to have a `dataset_config` dictionary inside to store information about the dataset properties (see [dataset setup](#dataset-setup))
 - tabular processing: added an additional processing mechanism that transforms the data before using it for training.
 - evaluation: added [TabSynDex](https://github.com/vikram2000b/tabsyndex) and [Table-Evaluator](https://github.com/Baukebrenninkmeijer/table-evaluator) for an extensive evaluation.
 - test folder: contains test code that test functionalities of the project
