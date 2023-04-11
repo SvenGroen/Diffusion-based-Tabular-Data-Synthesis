@@ -12,11 +12,15 @@ catboost_info/
 **/**.tar
 **/**.code-workspace
 **/**.csv
+**/READY
 exp/**/**/results_catboost.json
 exp/**/**/results_mlp.json
 exp/**/**/*log*.txt
 configs/
-src/***/data/
+src/**/data/**/info.json
+!src/**/data/adult/info.json
+*.zip
+*.pickle
 junk/
 RF/
 exps/
