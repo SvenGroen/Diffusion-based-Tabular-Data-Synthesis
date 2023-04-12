@@ -131,9 +131,10 @@ The repository has the following folder structure:
 ## Scripts
 The most important scripts are located at the `src/tabsynth/scripts` folder and do the following:
 
-- `pipeline.py`: used to train, sample and evaluate synthetic data for TabDDPM.
-- `tune_ddpm.py`: used for hyperparameter tuning for TabDDPM.
-- `eval_seeds.py`: samples multiple datasets and evaluates a trained model for multiple seeds.
+- `pipeline.py`: used to train, sample and evaluate synthetic data for TabDDPM (see [Figure](#pipelinepy)).
+The Pipeline script itself calls the `train.py`, `sample.py`, `eval_[catboost|mlp].py` and `eval_similarity.py` (see [Figure](#train-sample-eval)).
+- `tune_ddpm.py`: used for hyperparameter tuning for TabDDPM (see [Figure](#tune-and-eval_seedspy)). 
+- `eval_seeds.py`: samples multiple datasets and evaluates a trained model for multiple seeds (see [Figure](#tune-and-eval_seedspy)).
 - `tune_evaluation_model.py`: allows to find the best hyperparameters for the ML-efficacy models (Catboost or MLP)
 
 
@@ -254,7 +255,7 @@ You can easily implement additional processing mechanism by following these step
 
 This file contains the following information ([Adult income](https://archive.ics.uci.edu/ml/datasets/adult) dataset as example):
 
-```json
+```
 {
     "name": "Adult", // name of the dataset
     "id": "adult--default",
@@ -298,14 +299,20 @@ This file contains the following information ([Adult income](https://archive.ics
 
 ### Pipeline.py
 
-![Pipeline][1]
+
+<img src="https://github.com/SvenGroen/Masterarbeit/blob/master/images/pipeline-CHANGED.png?raw=true" alt="Pipeline script" width="500">
+
+
 
 ### Train, Sample, Eval
 
-![t_s_e][2]
+<img src="https://github.com/SvenGroen/Masterarbeit/blob/master/images/train-sample-eval-Changed.png?raw=true" width="500">
 
-[1]: https://github.com/SvenGroen/Masterarbeit/blob/master/images/pipeline-CHANGED.png?raw=true|width=100px
-[2]: https://github.com/SvenGroen/Masterarbeit/blob/master/images/train-sample-eval-Changed.png?raw=true|width=100px
+### Tune and Eval_seeds.py
+
+<img src="https://github.com/SvenGroen/Masterarbeit/blob/master/images/tune_eval_seeds-CHANGED.png?raw=true
+" width="1000">
+
 
 ## Changes made compared to the [TabDDPM](https://github.com/vikram2000b/tabsyndex) repository
 - separate outputs folder: The experiment results are stored in a separate "outputs" folder. This was required for accessing the results in Azure and makes it easier to find the results locally.
