@@ -163,7 +163,7 @@ src/tabsynth/scripts/pipeline.py --config src/tabsynth/exp/[dataset_name]/config
 sampling requires to load some pretrained model, which will be loaded from the `outputs/parent_dir/` (config.toml), so make sure to have a pretrained model saved at this location.
 ___
 
-><span style="font-size:1.3em;">*I want to find the best hyperparameters for a diffusion model (RECOMMENDED)*</span>
+><span style="font-size:1.3em;">*I want to find the best hyperparameters for a diffusion model (Recommended for finding the best model)*</span>
 
 1. Locate `src/tabsynth/exp/[dataset_name]/config.toml` and set your experiment parameters to your liking.
 Note that the following parameters will be changed and explored during hyperparameter training, so changing them here has no effect:
