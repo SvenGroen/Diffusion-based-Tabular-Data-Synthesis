@@ -310,8 +310,7 @@ This file contains the following information ([Adult income](https://archive.ics
 
 ### Tune and Eval_seeds.py
 
-<img src="https://github.com/SvenGroen/Masterarbeit/blob/master/images/tune_eval_seeds-CHANGED.png?raw=true
-">
+<img src="https://github.com/SvenGroen/Masterarbeit/blob/master/images/tune_eval_seeds-CHANGED.png?raw=true">
 
 
 ## Changes made compared to the [TabDDPM](https://github.com/vikram2000b/tabsyndex) repository
