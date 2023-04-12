@@ -1,5 +1,8 @@
 (WORK IN PROGRESS)
 
+![Tests](https://github.com/SvenGroen/Tabular-Data-Synthesis/actions/workflows/tests.yml/badge.svg)
+
+
 # Diffusion based Tabular data synthesis
 This repository allows you to create synthetic tabular data using [TabDDPM](https://github.com/rotot0/tab-ddpm), [CTABGAN](https://github.com/Team-TUD/CTAB-GAN), [CTABGAN+](https://github.com/Team-TUD/CTAB-GAN-Plus), TVAE and SMOTE.
 

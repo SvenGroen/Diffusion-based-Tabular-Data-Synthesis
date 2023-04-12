@@ -35,7 +35,7 @@ outputs/
 processor_state/
 *aml_checkpoints/
 src/tabsynth.egg-info/
-!.github/workflows/python-package.yml
+!.github/workflows/tests.yml
 !tests/data/**/*.json
 !tests/data/**/*.npy
 !tests/data/**/*.csv
