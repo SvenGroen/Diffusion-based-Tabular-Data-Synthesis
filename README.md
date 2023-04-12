@@ -294,7 +294,18 @@ This file contains the following information ([Adult income](https://archive.ics
     }
 }
 ```
+## Visualizations
 
+### Pipeline.py
+
+![Pipeline][1]
+
+### Train, Sample, Eval
+
+![t_s_e][2]
+
+[1]: https://github.com/SvenGroen/Masterarbeit/blob/master/images/pipeline-CHANGED.png?raw=true|width=100px
+[2]: https://github.com/SvenGroen/Masterarbeit/blob/master/images/train-sample-eval-Changed.png?raw=true|width=100px
 
 ## Changes made compared to the [TabDDPM](https://github.com/vikram2000b/tabsyndex) repository
 - separate outputs folder: The experiment results are stored in a separate "outputs" folder. This was required for accessing the results in Azure and makes it easier to find the results locally.
