@@ -50,7 +50,7 @@ pipeline = ROOT_DIR / f'tabsynth/scripts/pipeline.py'
 base_config_path = ROOT_DIR / f'tabsynth/exp/{ds_name}/config.toml'
 parent_path = ROOT_DIR / f'tabsynth/exp/{ds_name}/'
 exps_path = ROOT_DIR / f'tabsynth/exp/{ds_name}/many-exps/' # temporary dir. maybe will be replaced with tempdiвdr
-if RUNS_IN_CLOUD and not "outputs" in str(parent_path):
+if RUNS_IN_CLOUD or not "outputs" in str(parent_path):
     parent_path = 'outputs' / parent_path
     exps_path = 'outputs' / exps_path
 eval_seeds = ROOT_DIR / f'tabsynth/scripts/eval_seeds.py'
