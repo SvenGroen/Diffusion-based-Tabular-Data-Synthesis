@@ -1,7 +1,7 @@
 (WORK IN PROGRESS)
 
-![Tests](https://github.com/SvenGroen/Tabular-Data-Synthesis/actions/workflows/tests.yml/badge.svg)
-
+![Tests](https://github.com/SvenGroen/Diffusion-based-Tabular-Data-Synthesis/actions/workflows/tests.yml/badge.svg)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1fJS9lTVgiaBZq1VlE1SN4aFUZ50GpFAm?usp=sharing)
 
 # Diffusion based Tabular Data Synthesis
 This repository allows you to create synthetic tabular data using [TabDDPM](https://github.com/rotot0/tab-ddpm), [CTABGAN](https://github.com/Team-TUD/CTAB-GAN), [CTABGAN+](https://github.com/Team-TUD/CTAB-GAN-Plus), TVAE and SMOTE.
