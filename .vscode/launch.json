@@ -5,70 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Tune_no_path",
-            "type": "python",
-            "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal",
-            "justMyCode": false,
-            "env": {
-                // "PYTHONPATH": "${workspaceFolder}"
-            },
-            "args": [
-                "adult",
-                "10",
-                "synthetic",
-                "catboost",
-                "dppm_tuning_test",
-                "--eval_seeds",
-                "--debug",
-                "--optimize_sim_score"
-            ]
-        },
-        {
-            "name": "preprocess",
-            "type": "python",
-            "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal",
-            "justMyCode": true,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            },
-            "args": [
-                "--data_folder",
-                "tab-ddpm\\data\\adult-bgm",
-                "bgm"
-            ]
-        },
-        {
-            "name": "ERROR Pipeline",
-            "type": "python",
-            "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal",
-            "justMyCode": true,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            },
-            "args": [
-                "--config",
-                "exp\\adult\\many-exps\\config.toml",
-                "--sample",
-                "--eval",
-                "--change_val"
-            ]
-        },
-        {
             "name": "tune_eval_model",
             "type": "python",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            },
             "args": [
                 "adult",
                 "catboost",
@@ -80,15 +22,15 @@
             "name": "Pipeline",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/scripts/pipeline.py",
+            "program": "${workspaceFolder}/src/tabsynth/scripts/pipeline.py",
             "console": "integratedTerminal",
-            "justMyCode": false,
+            "justMyCode": true,
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             },
             "args": [
                 "--config",
-                "${workspaceFolder}\\exp\\adult\\config.toml",
+                "${workspaceFolder}/src/tabsynth/exp/adult/config.toml",
                 "--train",
                 "--sample",
                 "--eval",
@@ -106,7 +48,7 @@
                 "PYTHONPATH": "${workspaceFolder}"
             },
             "args": [
-                "data/adult/",
+                "src/tabsynth/data/adult/",
                 "26048",
                 "synthetic",
                 "cpu",
@@ -147,7 +89,7 @@
             },
             "args": [
                 "--config",
-                "${workspaceFolder}\\exp\\adult\\dppm_test_1_best\\config.toml",
+                "${workspaceFolder}/src/tabsynth/exp/adult/dppm_test_1_best/config.toml",
                 "2",
                 "ddpm",
                 "synthetic",
@@ -167,7 +109,7 @@
             },
             "args": [
                 "--config",
-                "${workspaceFolder}\\exp\\adult\\ctabgan-plus\\config.toml",
+                "${workspaceFolder}/src/tabsynth/exp/adult/ctabgan-plus/config.toml",
                 "--train",
                 "--sample",
                 "--eval",
@@ -186,7 +128,7 @@
             },
             "args": [
                 "--config",
-                "${workspaceFolder}\\exp\\adult\\ctabgan\\config.toml",
+                "${workspaceFolder}/src/tabsynth/exp/adult/ctabgan/config.toml",
                 "--train",
                 "--sample",
                 "--eval",
@@ -205,7 +147,7 @@
             },
             "args": [
                 "--config",
-                "${workspaceFolder}\\exp\\adult\\smote\\config.toml",
+                "${workspaceFolder}/src/tabsynth/exp/adult/smote/config.toml",
                 "--sample",
                 "--eval"
             ]
@@ -222,7 +164,7 @@
             },
             "args": [
                 "--config",
-                "${workspaceFolder}\\exp\\adult\\tvae\\config.toml",
+                "${workspaceFolder}/src/tabsynth/exp/adult/tvae/config.toml",
                 "--train",
                 "--sample",
                 "--eval",
@@ -241,7 +183,7 @@
             },
             "args": [
                 "--config",
-                "${workspaceFolder}\\exp\\adult\\ctabgan\\config.toml",
+                "${workspaceFolder}/src/tabsynth/exp/adult/ctabgan/config.toml",
                 "2",
                 "ctabgan",
                 "synthetic",

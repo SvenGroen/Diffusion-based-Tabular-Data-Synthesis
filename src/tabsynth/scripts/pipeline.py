@@ -99,7 +99,7 @@ def main():
         device = torch.device(raw_config['device'])
     else:
         device = torch.device('cuda:1')
-    if RUNS_IN_CLOUD and not "outputs" in raw_config["parent_dir"]:
+    if RUNS_IN_CLOUD or not "outputs" in raw_config["parent_dir"]:
         raw_config["parent_dir"] = os.path.join('outputs', raw_config["parent_dir"])
     
 
