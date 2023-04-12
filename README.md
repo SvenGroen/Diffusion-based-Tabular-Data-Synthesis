@@ -1,7 +1,7 @@
 (WORK IN PROGRESS)
 
 # Diffusion based Tabular data synthesis
-This repository allows you to create synthetic tabular data using TabDDPM, CTABGAN, CTABGAN+, TVAE and SMOTE.
+This repository allows you to create synthetic tabular data using [TabDDPM](https://github.com/rotot0/tab-ddpm), [CTABGAN](https://github.com/Team-TUD/CTAB-GAN), [CTABGAN+](https://github.com/Team-TUD/CTAB-GAN-Plus), TVAE and SMOTE.
 
 It contains the software code for my [master thesis](https://github.com/SvenGroen/Masterarbeit).
 The code is based upon the implementation of [TabDDPM](https://github.com/rotot0/tab-ddpm) and expands their code.
@@ -11,16 +11,26 @@ Make sure to have a look at the paper "TabDDPM: Modelling Tabular Data with Diff
 Additionally, this code makes use of [TabSynDex](https://github.com/vikram2000b/tabsyndex) implementation of the corresponding paper "TabSynDex: A Universal Metric for Robust Evaluation of Synthetic Tabular Data" ([paper](https://arxiv.org/abs/2207.05295)).
 
 ## Table of Contents
-
-1. [Setup](#setup)
-2. [Project Structure](#project-structure)
-3. [Running Experiments](#running-experiments)
-   - [Datasets](#datasets)
-   - [File Structure](#file-structure)
-   - [Examples](#examples)
+- [Setup](#setup)
+  * [Environment and Dataset Setup](#environment-and-dataset-setup)
+  * [Troubleshooting](#troubleshooting)
+- [Project Structure](#project-structure)
+  * [Folder Structure](#folder-structure)
+  * [Scripts](#scripts)
+- [How to run Experiments](#how-to-run-experiments)
+- [Tabular Processor](#tabular-processor)
+  * [What is a Tabular Processor?](#what-is-a-tabular-processor-)
+  * [Adding new Tabular Processing mechanisms](#adding-new-tabular-processing-mechanisms)
+- [Appendix](#appendix)
+  * [Dataset info.json](#dataset-infojson)
+  * [Visualizations](#visualizations)
+    + [Pipeline.py](#pipelinepy)
+    + [Train, Sample, Eval](#train--sample--eval)
+    + [Tune and Eval_seeds.py](#tune-and-eval-seedspy)
+  * [Changes made compared to the TabDDPM repository](#changes-made-compared-to-the-tabddpm-repository)
    
 # Setup
-## Environment Setup
+## Environment and Dataset Setup
 1. Install [anaconda](https://www.anaconda.com/) (just to manage the environment).
 2. clone git repository:
 
@@ -52,7 +62,7 @@ Instead, it is used to be fully visible within the code and is used to avoid
 adding the project folder to the `PYTHONPATH` manually, like in the [original implementation](https://github.com/rotot0/tab-ddpm).
 
 Installing it through pip locally allows easy installation for Windows and Linux users.
-Any changes that you make to the code (which is encouraged) will automatically discovered any used as well.
+Any changes that you make to the code (which is encouraged) will automatically discovered and used as well.
 
 5. Download and Setup the dataset:
 
@@ -131,9 +141,9 @@ The repository has the following folder structure:
 ## Scripts
 The most important scripts are located at the `src/tabsynth/scripts` folder and do the following:
 
-- `pipeline.py`: used to train, sample and evaluate synthetic data for TabDDPM (see [Figure](#pipelinepy)).
+- `pipeline.py`: used to train, sample and evaluate synthetic data for [TabDDPM](https://github.com/rotot0/tab-ddpm) (see [Figure](#pipelinepy)).
 The Pipeline script itself calls the `train.py`, `sample.py`, `eval_[catboost|mlp].py` and `eval_similarity.py` (see [Figure](#train-sample-eval)).
-- `tune_ddpm.py`: used for hyperparameter tuning for TabDDPM (see [Figure](#tune-and-eval_seedspy)). 
+- `tune_ddpm.py`: used for hyperparameter tuning for [TabDDPM](https://github.com/rotot0/tab-ddpm) (see [Figure](#tune-and-eval_seedspy)). 
 - `eval_seeds.py`: samples multiple datasets and evaluates a trained model for multiple seeds (see [Figure](#tune-and-eval_seedspy)).
 - `tune_evaluation_model.py`: allows to find the best hyperparameters for the ML-efficacy models (Catboost or MLP)
 
@@ -141,7 +151,7 @@ The Pipeline script itself calls the `train.py`, `sample.py`, `eval_[catboost|ml
 # How to run Experiments
 ><span style="font-size:1.3em;">*I want to generate synthetic data using diffusion model for a specific parameter set* </span>
 
-1. Locate `src/tabsynth/exp/[dataset_name]/config.toml` and set your experiment parameters to your likening.
+1. Locate `src/tabsynth/exp/[dataset_name]/config.toml` and set your experiment parameters to your liking.
 2. Run:
 ```
 src/tabsynth/scripts/pipeline.py --config src/tabsynth/exp/[dataset_name]/config.toml --train --sample --eval
@@ -152,7 +162,7 @@ ___
 
 ><span style="font-size:1.3em;">*I want to find the best hyperparameters for a diffusion model (RECOMMENDED)*</span>
 
-1. Locate `src/tabsynth/exp/[dataset_name]/config.toml` and set your experiment parameters to your likening.
+1. Locate `src/tabsynth/exp/[dataset_name]/config.toml` and set your experiment parameters to your liking.
 Note that the following parameters will be changed and explored during hyperparameter training, so changing them here has no effect:
 ```
 ['model_params']['rtdl_params']['d_layers']
@@ -191,28 +201,28 @@ src/tabsynth/scripts/tune_ddpm.py [ds_name] [train_size] synthetic [catboost|mlp
 src/tabsynth/scripts/tune_ddpm.py "adult" 26048 synthetic "catboost" ddpm_best --eval_seeds
 ```
 ___
-><span style="font-size:1.3em;">*I want to generate synthetic data using the SMOTE/CTABGAN(+)/TVAE model for a specific parameter set*</span>
+><span style="font-size:1.3em;">*I want to generate synthetic data using the SMOTE/[CTABGAN](https://github.com/Team-TUD/CTAB-GAN)/[CTABGAN+](https://github.com/Team-TUD/CTAB-GAN-Plus)/TVAE model for a specific parameter set*</span>
 
-1. Locate `src/tabsynth/exp/[dataset_name]/[model_name]/config.toml` and set your experiment parameters to your likening.
+1. Locate `src/tabsynth/exp/[dataset_name]/[model_name]/config.toml` and set your experiment parameters to your liking.
 2. Run:
 ```
 src/tabsynth/model_folder/pipeline_[model_name].py --config src/tabsynth/exp/[dataset_name]/[model_name]/config.toml --train --sample --eval
 ```
-&nbsp;&nbsp;&nbsp;&nbsp; It basically works the same as for the TabDDPM model, but just has a separate pipeline file
+&nbsp;&nbsp;&nbsp;&nbsp; It basically works the same as for the [TabDDPM](https://github.com/rotot0/tab-ddpm) model, but just has a separate pipeline file
 ___
-><span style="font-size:1.3em;">*I want to do the hyperparameter for the SMOTE/CTABGAN(+)/TVAE model*</span>
+><span style="font-size:1.3em;">*I want to do the hyperparameter for the SMOTE/[CTABGAN](https://github.com/Team-TUD/CTAB-GAN)/[CTABGAN+](https://github.com/Team-TUD/CTAB-GAN-Plus)/TVAE model*</span>
 
-1. Locate `src/tabsynth/exp/[dataset_name]/[model_name]/config.toml` and set your experiment parameters to your likening.
+1. Locate `src/tabsynth/exp/[dataset_name]/[model_name]/config.toml` and set your experiment parameters to your liking.
 2. Run:
 ```
 src/tabsynth/model_folder/tune_[model_name].py [data_path] [train_size]
 ```
-&nbsp;&nbsp;&nbsp;&nbsp; It works the same as for the TabDDPM model, but just has a separate tuning file.
+&nbsp;&nbsp;&nbsp;&nbsp; It works the same as for the [TabDDPM](https://github.com/rotot0/tab-ddpm) model, but just has a separate tuning file.
 ___
 
 # Tabular Processor
 ## What is a Tabular Processor?
-As part of my master thesis, I investigated how the generative capability of the diffusion model TabDDPM changes when processing the tabular data beforehand to account for specific challenges of tabular data.
+As part of my master thesis, I investigated how the generative capability of the diffusion model [TabDDPM](https://github.com/rotot0/tab-ddpm) changes when processing the tabular data beforehand to account for specific challenges of tabular data.
 
 In principle, a tabular processor is just a classical preprocessing strategy.
 This means, the raw data will be encoded by the tabular processor the encoded data will be used to train the diffusion model. The diffusion model will, after training, be used to sample new synthetic data.
@@ -296,6 +306,7 @@ This file contains the following information ([Adult income](https://archive.ics
 }
 ```
 ## Visualizations
+Green Boxes indicate changes compared to the original implementation of [TabDDPM](https://github.com/rotot0/tab-ddpm)
 
 ### Pipeline.py
 
@@ -310,7 +321,8 @@ This file contains the following information ([Adult income](https://archive.ics
 
 ### Tune and Eval_seeds.py
 
-<img src="https://github.com/SvenGroen/Masterarbeit/blob/master/images/tune_eval_seeds-CHANGED.png?raw=true">
+<img src="https://github.com/SvenGroen/Masterarbeit/blob/master/images/tune_eval_seeds-CHANGED.png?raw=true
+">
 
 
 ## Changes made compared to the [TabDDPM](https://github.com/vikram2000b/tabsyndex) repository
