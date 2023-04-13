@@ -324,8 +324,7 @@ Green Boxes indicate changes compared to the original implementation of [TabDDPM
 
 ### Tune and Eval_seeds.py
 
-<img src="https://github.com/SvenGroen/Masterarbeit/blob/master/images/tune_eval_seeds-CHANGED.png?raw=true
-">
+<img src="https://github.com/SvenGroen/Masterarbeit/blob/master/images/tune_eval_seeds-CHANGED.png?raw=true">
 
 
 ## Changes made compared to the [TabDDPM](https://github.com/vikram2000b/tabsyndex) repository
