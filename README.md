@@ -1,5 +1,3 @@
-(WORK IN PROGRESS)
-
 ![Tests](https://github.com/SvenGroen/Diffusion-based-Tabular-Data-Synthesis/actions/workflows/tests.yml/badge.svg)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1fJS9lTVgiaBZq1VlE1SN4aFUZ50GpFAm?usp=sharing)
 
@@ -13,6 +11,9 @@ Make sure to have a look at the paper "TabDDPM: Modelling Tabular Data with Diff
 
 Additionally, this code makes use of [TabSynDex](https://github.com/vikram2000b/tabsyndex) implementation of the corresponding paper "TabSynDex: A Universal Metric for Robust Evaluation of Synthetic Tabular Data" ([paper](https://arxiv.org/abs/2207.05295)).
 
+## Limitations and known issues:
+- So far, I only tested on the "adult" dataset (binary classification).  
+Regression or Multiclass-classifications datasets should also work at the current state but I have not tested it yet. It might be the case that this would require some debugging. Let me know if you find some issues.
 ## Table of Contents
 - [Setup](#setup)
   * [Environment and Dataset Setup](#environment-and-dataset-setup)
@@ -21,6 +22,7 @@ Additionally, this code makes use of [TabSynDex](https://github.com/vikram2000b/
   * [Folder Structure](#folder-structure)
   * [Scripts](#scripts)
 - [How to run Experiments](#how-to-run-experiments)
+  * [Apply to own Datasets](#apply-to-own-dataset)
 - [Tabular Processor](#tabular-processor)
   * [What is a Tabular Processor?](#what-is-a-tabular-processor-)
   * [Adding new Tabular Processing mechanisms](#adding-new-tabular-processing-mechanisms)
@@ -31,8 +33,11 @@ Additionally, this code makes use of [TabSynDex](https://github.com/vikram2000b/
     + [Train, Sample, Eval](#train--sample--eval)
     + [Tune and Eval_seeds.py](#tune-and-eval-seedspy)
   * [Changes made compared to the TabDDPM repository](#changes-made-compared-to-the-tabddpm-repository)
-   
+___
+Make sure to have a look at the [Google Colab](https://colab.research.google.com/drive/1fJS9lTVgiaBZq1VlE1SN4aFUZ50GpFAm?usp=sharing) for an minimal setup and experiment running example!
+___
 # Setup
+
 ## Environment and Dataset Setup
 1. Install [anaconda](https://www.anaconda.com/) (just to manage the environment).
 2. clone git repository:
@@ -222,6 +227,27 @@ src/tabsynth/model_folder/tune_[model_name].py [data_path] [train_size]
 ```
 &nbsp;&nbsp;&nbsp;&nbsp; It works the same as for the [TabDDPM](https://github.com/rotot0/tab-ddpm) model, but just has a separate tuning file.
 ___
+## Apply to own dataset
+><span style="font-size:1.3em;">*I want to use my own dataset and generate synthetic data from it*</span>
+
+To generate synthetic data from your own dataset you need to follow the following steps:
+
+1. Split your dataset into Training, Validation, and Test sets
+2. Separate numerical, categorical and the target column (the column which should be predicted in a classification/regression scenario) from each other.
+3. Ensure that the data has the right dimensionality:  
+    3.1 Numerical and Categorical columns need to be of dimensionality (number_of_rows, number_of_columns)  
+    3.2 Target column needs to be of shape (number_of_rows, ); For example: (26048, ) is correct, (26048,1) is not!
+4. Convert you variables to numpy arrays, if there are not already
+5. Save your array as separate numpy files (.npy) as `"X_[cat|num]_[train|val|test].npy"` and `"y_[train|val|test].npy"`    
+(big "X" and small "y"!) at `src/tabsynth/data/[your_dset_name]/`
+6. create and save a `info.json` in the same folder (see [Dataset info](#dataset-infojson)!) that stores information on the structure of the data.
+
+Hint: Have a look at [this code](https://github.com/Yura52/tabular-dl-num-embeddings/blob/main/bin/datasets.py) which shows an implementation of how the above procedure can be done for multiple different datasets  
+(you don't need the `"idx_[train|val|test].npy"` file for this repository)
+
+Hint2: Copy & paste the above procedure into ChatGPT with a small description of you dataset :smile:
+___
+
 
 # Tabular Processor
 ## What is a Tabular Processor?
@@ -232,7 +258,7 @@ This means, the raw data will be encoded by the tabular processor the encoded da
 Since the diffusion model was trained on encoded data, it will produce synthetic encoded data.
 Therefore, the tabular processor needs to decode the encoded data back into its original (human readable) format.
 
-The goal of the master thesis was to extend the existing implementation [TODO LINK].
+The goal of the master thesis was to extend the already [existing implementation]((https://github.com/rotot0/tab-ddpm)).
 Hence, the preprocessing from the original implementation (specified in the config.toml [train.T]) remained untouched and will be executed **AFTER** the tabular processing encoding.
 
 To keep the tabular processing as separate and extendable as possible, the strategy design pattern was chosen:
