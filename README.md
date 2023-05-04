@@ -353,7 +353,7 @@ Green Boxes indicate changes compared to the original implementation of [TabDDPM
 <img src="https://github.com/SvenGroen/Masterarbeit/blob/master/images/tune_eval_seeds-CHANGED.png?raw=true">
 
 
-## Changes made compared to the [TabDDPM](https://github.com/vikram2000b/tabsyndex) repository
+## Changes made compared to the [TabDDPM](https://github.com/rotot0/tab-ddpm) repository
 - separate outputs folder: The experiment results are stored in a separate "outputs" folder. This was required for accessing the results in Azure and makes it easier to find the results locally.
 - debug option: some scripts also have a `--debug` flag than can be set, that changes hyperparameters in such a way, that one can quickly go through the whole script without waiting hours. 
 - config.toml: added the `[tabular_processor][type]` option. If you don't want to use a tabular_processor, set it to "identity"
