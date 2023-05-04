@@ -1,4 +1,4 @@
-name: t6
+name: tabsynth
 channels:
   # - Microsoft
   - defaults
