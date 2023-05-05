@@ -193,7 +193,7 @@ Hence, the most important parameters to set are:
 
 2. Run:
 ```
-src/tabsynth/scripts/tune_ddpm.py [ds_name] [train_size] synthetic [catboost|mlp] [exp_name] --eval_seeds
+src/tabsynth/scripts/tune_ddpm.py [ds_name] [train_size] synthetic [catboost|mlp] [exp_name] --eval_seeds [--debug] [--optimize_sim_score]
 ```
 &nbsp;&nbsp;&nbsp;&nbsp;**Explanation**:
 ```
@@ -206,7 +206,7 @@ src/tabsynth/scripts/tune_ddpm.py [ds_name] [train_size] synthetic [catboost|mlp
 ```
 &nbsp;&nbsp;&nbsp;&nbsp;**Example**:
 ```
-src/tabsynth/scripts/tune_ddpm.py "adult" 26048 synthetic "catboost" "ddpm_best" --eval_seeds
+src/tabsynth/scripts/tune_ddpm.py "adult" 26048 synthetic "catboost" "my_ddpm_experiment" --eval_seeds
 ```
 ___
 ><span style="font-size:1.3em;">*I want to generate synthetic data using the SMOTE/[CTABGAN](https://github.com/Team-TUD/CTAB-GAN)/[CTABGAN+](https://github.com/Team-TUD/CTAB-GAN-Plus)/TVAE model for a specific parameter set*</span>
