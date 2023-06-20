@@ -37,7 +37,7 @@ cat_encoding = "__none__"
 y_policy = "default"
 
 [tabular_processor]
-type = "ft"
+type = "identity"
 
 [sample]
 num_samples = 216000

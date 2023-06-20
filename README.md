@@ -193,7 +193,7 @@ Hence, the most important parameters to set are:
 
 2. Run:
 ```
-src/tabsynth/scripts/tune_ddpm.py [ds_name] [train_size] synthetic [catboost|mlp] [exp_name] --eval_seeds
+src/tabsynth/scripts/tune_ddpm.py [ds_name] [train_size] synthetic [catboost|mlp] [exp_name] --eval_seeds [--debug] [--optimize_sim_score]
 ```
 &nbsp;&nbsp;&nbsp;&nbsp;**Explanation**:
 ```
@@ -206,7 +206,7 @@ src/tabsynth/scripts/tune_ddpm.py [ds_name] [train_size] synthetic [catboost|mlp
 ```
 &nbsp;&nbsp;&nbsp;&nbsp;**Example**:
 ```
-src/tabsynth/scripts/tune_ddpm.py "adult" 26048 synthetic "catboost" "ddpm_best" --eval_seeds
+src/tabsynth/scripts/tune_ddpm.py "adult" 26048 synthetic "catboost" "my_ddpm_experiment" --eval_seeds
 ```
 ___
 ><span style="font-size:1.3em;">*I want to generate synthetic data using the SMOTE/[CTABGAN](https://github.com/Team-TUD/CTAB-GAN)/[CTABGAN+](https://github.com/Team-TUD/CTAB-GAN-Plus)/TVAE model for a specific parameter set*</span>
@@ -353,7 +353,7 @@ Green Boxes indicate changes compared to the original implementation of [TabDDPM
 <img src="https://github.com/SvenGroen/Masterarbeit/blob/master/images/tune_eval_seeds-CHANGED.png?raw=true">
 
 
-## Changes made compared to the [TabDDPM](https://github.com/vikram2000b/tabsyndex) repository
+## Changes made compared to the [TabDDPM](https://github.com/rotot0/tab-ddpm) repository
 - separate outputs folder: The experiment results are stored in a separate "outputs" folder. This was required for accessing the results in Azure and makes it easier to find the results locally.
 - debug option: some scripts also have a `--debug` flag than can be set, that changes hyperparameters in such a way, that one can quickly go through the whole script without waiting hours. 
 - config.toml: added the `[tabular_processor][type]` option. If you don't want to use a tabular_processor, set it to "identity"
