@@ -23,11 +23,12 @@ from tabsynth.evaluation.tabsyndex import tabsyndex
 from tabsynth.tabular_processing.tabular_data_controller import TabularDataController
 import time
 import os
-from tabsynth import  lib
 import numpy as np
 import pandas as pd
 import json
 from pathlib import Path
+
+from tabsynth.lib.variables import ROOT_DIR
 
 
 def main():
@@ -37,51 +38,61 @@ def main():
     This script loads multiple experiment results, applies transformations to the data, and generates plots for each method. 
     The plots are saved in a designated output directory.
     """
-    base_path = json.load(open("secrets.json", "r"))["Experiment_Folder"]
+    base_path = os.path.join(json.load(open("secrets.json", "r"))["Experiment_Folder"])
 
     # Define the output directory of the experiments for the different models.
     # Todo: Rename the output directories
-    method2exp = {
-        "trash": "adult/21_12_2022-identity-50optuna-ts26048-catboost-tune-CatboostAndSimilarityEval-syntheticEval/outputs/exp/adult/ddpm_identity_best/final_eval/", # for some reason the plots did look different in the first run, should be fixed for continouse columns but not for categorical columns yet.
-        "real": "adult/20_12_2022-REAL-BASELINE/outputs/exp/adult/ddpm_real/final_eval/",
-        "tab-ddpm": "adult/21_12_2022-identity-50optuna-ts26048-catboost-tune-CatboostAndSimilarityEval-syntheticEval/outputs/exp/adult/ddpm_identity_best/final_eval/",
-        "tab-ddpm-bgm": "adult/20_12_2022-bgm-50optuna-ts26048-catboost-tune-CatboostAndSimilarityEval-syntheticEval/outputs/exp/adult/ddpm_bgm_best/final_eval/",
-        "tab-ddpm-simTune": "adult/12_02_2023-identity_sim_tune-50optuna-ts26048-catboost-tune-CatboostAndSimilarityEval-syntheticEval/outputs/exp/adult/ddpm_identity_sim_tune_best/final_eval/",
-        "tab-ddpm-bgm-simTune" : "adult/12_02_2023-bgm_sim_tune-50optuna-ts26048-catboost-tune-CatboostAndSimilarityEval-syntheticEval/outputs/exp/adult/ddpm_bgm_sim_tune_best/final_eval/",
-        "tab-ddpm-simTune-minmax": "adult/02_03_2023-identity_sim_tune_min_max/outputs/exp/adult/ddpm_identity_sim_tune_minmax_best/final_eval/",
-        "tab-ddpm-bgm-simTune-minmax": "adult/02_03_2023-bgm_sim_tune_min_max/outputs/exp/adult/ddpm_bgm_sim_tune_minmax_best/final_eval/",
-        "tab-ddpm-ft" : "adult/08_02_2023-ft-50optuna-ts26048-catboost-tune-CatboostAndSimilarityEval-syntheticEval/outputs/exp/adult/ddpm_ft_best/final_eval/",
-        "tab-ddpm-ft-simTune": "adult/15_03_2023-ft-tabddpm-SimTune/outputs/exp/adult/ddpm_ft_sim_tune_quantile_best/final_eval/",
-        "smote": "adult/02_01_2023-identity-SMOTE/outputs/exp/adult/smote/final_eval/",
-        "ctabgan+": "adult/05_01_2023-identity-CTABGAN-Plus/outputs/exp/adult/ctabgan-plus/final_eval/",
-        "ctabgan": "adult/02_01_2023-identity-CTABGAN/outputs/exp/adult/ctabgan/final_eval/",
-        "ctabgan_simTune": "adult/08_03_2023-identity-CTABGAN-simtune/outputs/exp/adult/ctabgan/final_eval",
-        "tvae": "adult/03_01_2023-identity-TVAE/outputs/exp/adult/tvae/final_eval/",
-        "tvae_simTune": "adult/13_02_2023-TVAE_sim_tune-identity-50optuna-ts26048-catboost-tune-CatboostAndSimilarityEval-syntheticEval/outputs/exp/adult/tvae/final_eval",
+    method2exp = {      
+    "real":                         "REAL_baseline/outputs/exp/adult/ddpm_real/final_eval/",
+    "tvae":                         "TVAE_identity_ml/outputs/exp/adult/tvae/final_eval/",
+    "smote":                        "SMOTE_identity/outputs/exp/adult/smote/final_eval/",
+    "ctabgan":                      "CTABGAN_identity_ml/outputs/exp/adult/ctabgan/final_eval/",
+    "ctabgan+":                     "CTABGAN_Plus_identity_ml/outputs/exp/adult/ctabgan-plus/final_eval/",
+    "tab-ddpm":                     "TabDDPM_identity_ml_q/outputs/exp/adult/ddpm_identity_best/final_eval/",
+    "tab-ddpm-bgm":                 "TabDDPM_bgm_ml_q/outputs/exp/adult/ddpm_bgm_best/final_eval/",
+    "tab-ddpm-ft" :                 "TabDDPM_ft_ml_q/outputs/exp/adult/ddpm_ft_best/final_eval/",
+    "ctabgan_simTune":              "CTABGAN_identity_s/outputs/exp/adult/ctabgan/final_eval",
+    "ctabgan+_simTune":             "CTABGAN_Plus_identity_s/outputs/exp/adult/ctabgan-plus/final_eval",#
+    "tvae_simTune":                 "TVAE_identity_s/outputs/exp/adult/tvae/final_eval",
+    "tab-ddpm-simTune":             "TabDDPM_identity_s_q/outputs/exp/adult/ddpm_identity_sim_tune_best/final_eval/",
+    "tab-ddpm-bgm-simTune" :        "TabDDPM_bgm_s_q/outputs/exp/adult/ddpm_bgm_sim_tune_best/final_eval/",
+    "tab-ddpm-ft-simTune":          "TabDDPM_ft_s_q/outputs/exp/adult/ddpm_ft_sim_tune_quantile_best/final_eval/",
+    "tab-ddpm-simTune-minmax":      "TabDDPM_identity_s_m/outputs/exp/adult/ddpm_identity_sim_tune_minmax_best/final_eval/",
+    "tab-ddpm-bgm-simTune-minmax":  "TabDDPM_bgm_s_m/outputs/exp/adult/ddpm_bgm_sim_tune_minmax_best/final_eval/",
+    "tab-ddpm-bgm-simTune-none":     "TabDDPM_bgm_s_n/outputs/exp/adult/ddpm_bgm_sim_tune_none_best/final_eval/",#
     } 
     for k,v in method2exp.items():
-        method2exp[k] = Path(os.path.join(base_path, v))
+        method2exp[k] = Path(os.path.join(base_path,"adult", v))
 
     out_dir = Path(os.path.join(base_path,"changed_plots"))
     out_dir.mkdir(exist_ok=True, parents=True)
 
     i=0
+    visualization_info = None
     # for name, path create plots for each method
     for name, path in method2exp.items():
+        # if not "ctabgan+" in name:
+        #     continue
         raw_config = lib.load_config(path / "config.toml")
         out = out_dir / name
         if name == "real":
             raw_config["tabular_processing"]= "identity"
             raw_config["eval"]["type"]['eval_type'] = "real"
 
-        produce_plots(
+        if not str(raw_config['real_data_path']).startswith("src/tabsynth"): # changed structure of the project later, therefore the config is still the old one for some of the old experiments
+            raw_config['real_data_path'] = ROOT_DIR / "tabsynth" / raw_config['real_data_path']
+
+        print("---Producing plots for method: ", name, " ---")
+         
+        visualization_info = produce_plots(
                     parent_dir=path,
                     real_data_path=raw_config['real_data_path'],
                     eval_type=raw_config['eval']['type']['eval_type'],
                     num_classes=2,
                     T_dict=raw_config['eval']['T'],
                     seed=raw_config['seed'],
-                    save_dir=out
+                    save_dir=out,
+                    visualization_info=visualization_info # ensures that the plots look the same for all methods
                     )
         i += 1
         # if i==4:
@@ -95,6 +106,7 @@ def produce_plots(
     seed = 0,
     num_classes = 2,
     save_dir = None,
+    visualization_info = None
     ):  
     """
     Produces plots comparing the similarity between real and synthetic data for different methods.
@@ -167,7 +179,7 @@ def produce_plots(
     
     # Create plots using TableEvaluator
     print("Starting table Evaluator")
-    from evaluation.table_evaluator_fix import TableEvaluatorFix as TableEvaluator
+    from tabsynth.evaluation.table_evaluator_fix import TableEvaluatorFix as TableEvaluator
 
     target_col=train_transform.config["dataset_config"]["target_column"]
     cat_col = train_transform.config["dataset_config"]["cat_columns"]
@@ -189,8 +201,11 @@ def produce_plots(
     te = TableEvaluator(df_test, df_train, cat_cols=train_transform.config["dataset_config"]["cat_columns"])
     save_dir = os.path.join(save_dir, "plots")
     print("Visual Eval")
+    if visualization_info is not None:
+        te.dist_dict = visualization_info
     te.visual_evaluation(save_dir=save_dir)
-
+    visualization_info = te.dist_dict
+    return visualization_info
 
 if __name__ == "__main__":
     main()

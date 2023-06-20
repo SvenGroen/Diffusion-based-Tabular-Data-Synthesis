@@ -11,5 +11,8 @@
         "-p",
         "test*.py"
     ],
-    "python.formatting.provider": "black"
+    "python.formatting.provider": "black",
+    "python.analysis.extraPaths": [
+        "./src/tabsynth"
+    ]
 }
